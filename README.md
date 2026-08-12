@@ -40,7 +40,17 @@ Servidor sobe em `http://localhost:3333`. Para explorar os dados visualmente, `n
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 4 concluída (PostgreSQL + Prisma, modelagem inicial de Categoria/Produto, veja `backend/prisma/`).
+🚧 Em desenvolvimento — Etapa 5 concluída (API REST de produtos com CRUD completo, veja `backend/src/routes/produtos.routes.ts`).
+
+### API de produtos
+
+| Método | Rota            | Descrição                                              |
+|--------|-----------------|---------------------------------------------------------|
+| GET    | `/produtos`     | Lista produtos (aceita `?categoriaId=`)                 |
+| GET    | `/produtos/:id` | Busca um produto                                         |
+| POST   | `/produtos`     | Cria um produto                                          |
+| PUT    | `/produtos/:id` | Atualiza um produto (parcial: só os campos enviados)     |
+| DELETE | `/produtos/:id` | Remove um produto                                         |
 
 ## Etapas do projeto
 
@@ -49,7 +59,7 @@ Servidor sobe em `http://localhost:3333`. Para explorar os dados visualmente, `n
 - [x] Etapa 2 — Interatividade com JavaScript puro
 - [x] Etapa 3 — Primeiro servidor Node/Express
 - [x] Etapa 4 — PostgreSQL + Prisma (modelagem inicial)
-- [ ] Etapa 5 — API de produtos (CRUD)
+- [x] Etapa 5 — API de produtos (CRUD)
 - [ ] Etapa 6 — Migrar cardápio para React (Vite)
 - [ ] Etapa 7 — Carrinho e checkout completos
 - [ ] Etapa 8 — API de pedidos
