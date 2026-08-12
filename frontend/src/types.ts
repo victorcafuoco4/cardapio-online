@@ -12,6 +12,7 @@ export type Produto = {
   preco: string;
   foto: string;
   ordem: number;
+  estoque: number;
   categoriaId: number;
   categoria: Categoria;
 };

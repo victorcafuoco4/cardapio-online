@@ -124,6 +124,17 @@ body {
   color: white;
 }
 
+.produto--esgotado {
+  opacity: 0.6;
+}
+
+.produto__esgotado {
+  align-self: flex-start;
+  color: #a33;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
 /* ---------- Rodapé ---------- */
 
 .rodape {
@@ -213,6 +224,12 @@ body {
   font-size: 1.1rem;
 }
 
+.dialog__estoque-baixo {
+  font-size: 0.8rem;
+  color: #a33;
+  margin-top: 0.25rem;
+}
+
 .dialog__quantidade {
   display: flex;
   align-items: center;
@@ -228,6 +245,11 @@ body {
   background: white;
   font-size: 1.1rem;
   cursor: pointer;
+}
+
+.dialog__quantidade button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .dialog__adicionar {
@@ -591,6 +613,11 @@ body {
 .tabela-painel__discreto {
   color: #888;
   font-size: 0.8rem;
+}
+
+.tabela-painel__esgotado {
+  color: #a33;
+  font-weight: 600;
 }
 
 .tabela-painel th,

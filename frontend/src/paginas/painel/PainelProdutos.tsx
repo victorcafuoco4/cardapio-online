@@ -68,6 +68,7 @@ export function PainelProdutos() {
               <th>Nome</th>
               <th>Categoria</th>
               <th>Preço</th>
+              <th>Estoque</th>
               <th aria-label="Ações"></th>
             </tr>
           </thead>
@@ -77,6 +78,9 @@ export function PainelProdutos() {
                 <td>{produto.nome}</td>
                 <td>{produto.categoria.nome}</td>
                 <td>{formatarPreco(Number(produto.preco))}</td>
+                <td className={produto.estoque === 0 ? 'tabela-painel__esgotado' : undefined}>
+                  {produto.estoque === 0 ? 'Esgotado' : produto.estoque}
+                </td>
                 <td className="tabela-painel__acoes">
                   <button onClick={() => abrirEdicao(produto)}>Editar</button>
                   <button onClick={() => excluir(produto)}>Excluir</button>

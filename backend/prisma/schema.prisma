@@ -28,6 +28,7 @@ model Produto {
   preco       Decimal  @db.Decimal(10, 2)
   foto        String
   ordem       Int      @default(0)
+  estoque     Int      @default(0)
   categoriaId Int
   categoria   Categoria @relation(fields: [categoriaId], references: [id])
   itensPedido ItemPedido[]

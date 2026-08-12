@@ -52,6 +52,7 @@ type CorpoProduto = {
   foto?: unknown;
   categoriaId?: unknown;
   ordem?: unknown;
+  estoque?: unknown;
 };
 
 // Valida os campos do corpo da requisição.
@@ -78,8 +79,14 @@ function validarCamposProduto(corpo: CorpoProduto, { parcial }: { parcial: boole
   validarCampo('foto', (v) => typeof v === 'string' && v.trim().length > 0, 'foto deve ser um texto não vazio');
   validarCampo('preco', (v) => typeof v === 'number' && v > 0, 'preco deve ser um número maior que zero');
   validarCampo('categoriaId', (v) => Number.isInteger(v), 'categoriaId deve ser um número inteiro');
-  // ordem tem valor default no schema, então nunca é obrigatório — só validado se enviado.
+  // ordem e estoque têm valor default no schema, então nunca são obrigatórios — só validados se enviados.
   validarCampo('ordem', (v) => Number.isInteger(v), 'ordem deve ser um número inteiro', { obrigatorio: false });
+  validarCampo(
+    'estoque',
+    (v) => Number.isInteger(v) && (v as number) >= 0,
+    'estoque deve ser um número inteiro maior ou igual a zero',
+    { obrigatorio: false },
+  );
 
   return erros;
 }
@@ -92,7 +99,7 @@ produtosRouter.post('/', autenticar, async (req, res) => {
     return;
   }
 
-  const { nome, descricao, preco, foto, categoriaId, ordem } = req.body;
+  const { nome, descricao, preco, foto, categoriaId, ordem, estoque } = req.body;
 
   const categoria = await prisma.categoria.findUnique({ where: { id: categoriaId } });
   if (!categoria) {
@@ -101,7 +108,7 @@ produtosRouter.post('/', autenticar, async (req, res) => {
   }
 
   const produto = await prisma.produto.create({
-    data: { nome, descricao, preco, foto, categoriaId, ordem },
+    data: { nome, descricao, preco, foto, categoriaId, ordem, estoque },
     include: { categoria: true },
   });
 
@@ -132,19 +139,20 @@ produtosRouter.put('/:id', autenticar, async (req, res) => {
     }
   }
 
-  const { nome, descricao, preco, foto, categoriaId, ordem } = corpo as {
+  const { nome, descricao, preco, foto, categoriaId, ordem, estoque } = corpo as {
     nome?: string;
     descricao?: string;
     preco?: number;
     foto?: string;
     categoriaId?: number;
     ordem?: number;
+    estoque?: number;
   };
 
   try {
     const produto = await prisma.produto.update({
       where: { id },
-      data: { nome, descricao, preco, foto, categoriaId, ordem },
+      data: { nome, descricao, preco, foto, categoriaId, ordem, estoque },
       include: { categoria: true },
     });
     res.json(produto);

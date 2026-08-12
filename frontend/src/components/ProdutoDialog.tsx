@@ -38,12 +38,19 @@ export function ProdutoDialog({ produto, aoFechar }: ProdutoDialogProps) {
           <h3>{produto.nome}</h3>
           <p>{produto.descricao}</p>
           <p className="dialog__preco">{formatarPreco(Number(produto.preco))}</p>
+          {produto.estoque <= 5 && (
+            <p className="dialog__estoque-baixo">Apenas {produto.estoque} em estoque</p>
+          )}
           <div className="dialog__quantidade">
             <button aria-label="Diminuir quantidade" onClick={() => setQuantidade((q) => Math.max(1, q - 1))}>
               −
             </button>
             <span>{quantidade}</span>
-            <button aria-label="Aumentar quantidade" onClick={() => setQuantidade((q) => q + 1)}>
+            <button
+              aria-label="Aumentar quantidade"
+              onClick={() => setQuantidade((q) => Math.min(produto.estoque, q + 1))}
+              disabled={quantidade >= produto.estoque}
+            >
               +
             </button>
           </div>

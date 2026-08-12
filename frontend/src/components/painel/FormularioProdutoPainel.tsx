@@ -18,9 +18,18 @@ type Campos = {
   foto: string;
   categoriaId: string;
   ordem: string;
+  estoque: string;
 };
 
-const CAMPOS_VAZIOS: Campos = { nome: '', descricao: '', preco: '', foto: '', categoriaId: '', ordem: '' };
+const CAMPOS_VAZIOS: Campos = {
+  nome: '',
+  descricao: '',
+  preco: '',
+  foto: '',
+  categoriaId: '',
+  ordem: '',
+  estoque: '0',
+};
 
 export function FormularioProdutoPainel({
   aberto,
@@ -49,6 +58,7 @@ export function FormularioProdutoPainel({
               foto: produto.foto,
               categoriaId: String(produto.categoriaId),
               ordem: String(produto.ordem),
+              estoque: String(produto.estoque),
             }
           : CAMPOS_VAZIOS,
       );
@@ -67,6 +77,7 @@ export function FormularioProdutoPainel({
 
     const preco = Number(campos.preco.replace(',', '.'));
     const categoriaId = Number(campos.categoriaId);
+    const estoque = campos.estoque.trim() ? Number(campos.estoque) : 0;
 
     if (
       !campos.nome.trim() ||
@@ -74,9 +85,11 @@ export function FormularioProdutoPainel({
       !campos.foto.trim() ||
       !Number.isFinite(preco) ||
       preco <= 0 ||
-      !categoriaId
+      !categoriaId ||
+      !Number.isInteger(estoque) ||
+      estoque < 0
     ) {
-      setErro('Preencha nome, descrição, foto, um preço válido e uma categoria.');
+      setErro('Preencha nome, descrição, foto, um preço válido, uma categoria e um estoque válido (inteiro, ≥ 0).');
       return;
     }
 
@@ -90,6 +103,7 @@ export function FormularioProdutoPainel({
       foto: campos.foto.trim(),
       categoriaId,
       ordem: campos.ordem.trim() ? Number(campos.ordem) : undefined,
+      estoque,
     };
 
     try {
@@ -180,6 +194,17 @@ export function FormularioProdutoPainel({
             inputMode="numeric"
             value={campos.ordem}
             onChange={(e) => atualizarCampo('ordem', e.target.value)}
+          />
+        </div>
+
+        <div className="campo">
+          <label htmlFor="produto-estoque">Estoque</label>
+          <input
+            id="produto-estoque"
+            type="text"
+            inputMode="numeric"
+            value={campos.estoque}
+            onChange={(e) => atualizarCampo('estoque', e.target.value)}
           />
         </div>
 

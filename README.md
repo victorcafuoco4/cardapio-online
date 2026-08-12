@@ -51,7 +51,7 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 12 concluída (acompanhamento de pedido pelo cliente em `/pedido/:id`, sem login).
+🚧 Em desenvolvimento — Etapa 13 concluída (estoque básico: cada produto tem uma quantidade disponível, decrementada de forma atômica a cada pedido).
 
 ### Lojista (demo)
 
@@ -70,6 +70,8 @@ Criado pelo seed (`npm run db:seed`). Login em `http://localhost:5173/painel/log
 ### API de produtos
 
 Rotas de escrita (POST/PUT/DELETE) exigem `Authorization: Bearer <token>` — só o lojista logado pode alterar o cardápio.
+
+Cada produto tem um `estoque` (inteiro, padrão 0). Ao criar um pedido, o backend decrementa o estoque de cada item dentro de uma transação condicionada a ter saldo suficiente (`estoque >= quantidade`) — isso evita que dois pedidos simultâneos vendam mais do que existe. Um produto com `estoque: 0` aparece como "Esgotado" no cardápio.
 
 | Método | Rota            | Descrição                                              |
 |--------|-----------------|---------------------------------------------------------|
@@ -115,6 +117,6 @@ Rotas de escrita (POST/PUT/DELETE) exigem `Authorization: Bearer <token>` — s�
 - [x] Etapa 10 — Painel: CRUD de produtos/categorias
 - [x] Etapa 11 — Painel: gestão de pedidos
 - [x] Etapa 12 — Acompanhamento de status pelo cliente
-- [ ] Etapa 13 — Estoque básico
+- [x] Etapa 13 — Estoque básico
 - [ ] Etapa 14 — Dashboard e financeiro básico
 - [ ] Etapa 15 — Deploy

@@ -9,6 +9,12 @@ const TIPOS_ENTREGA = ['RETIRADA', 'ENTREGA'] as const;
 const FORMAS_PAGAMENTO = ['DINHEIRO', 'CARTAO', 'PIX'] as const;
 const STATUS_PEDIDO = ['RECEBIDO', 'EM_PREPARO', 'PRONTO', 'ENTREGUE', 'CANCELADO'] as const;
 
+class EstoqueInsuficienteError extends Error {
+  constructor(public produtoId: number) {
+    super(`estoque insuficiente para o produto ${produtoId}`);
+  }
+}
+
 // GET /pedidos — lista pedidos, mais recentes primeiro. Protegida: é o painel de
 // gestão do lojista, expõe dados de clientes (nome, telefone, endereço).
 pedidosRouter.get('/', autenticar, async (req, res) => {
@@ -140,28 +146,53 @@ pedidosRouter.post('/', async (req, res) => {
     new Prisma.Decimal(0),
   );
 
-  const pedido = await prisma.pedido.create({
-    data: {
-      nomeCliente,
-      telefone,
-      tipoEntrega,
-      endereco,
-      formaPagamento,
-      trocoPara,
-      observacoes,
-      total,
-      itens: {
-        create: itensPedidos.map((item) => ({
-          produtoId: item.produtoId,
-          quantidade: item.quantidade,
-          precoUnitario: mapaProdutos.get(item.produtoId)!.preco,
-        })),
-      },
-    },
-    include: { itens: { include: { produto: true } } },
-  });
+  try {
+    const pedido = await prisma.$transaction(async (tx) => {
+      // Decrementa o estoque de cada item condicionado a ter saldo suficiente.
+      // Esse where com "estoque >= quantidade" é o que torna a operação atômica:
+      // se dois pedidos chegarem ao mesmo tempo pro último item em estoque, só um
+      // dos updates afeta uma linha — o outro vê count 0 e cai no erro abaixo.
+      for (const item of itensPedidos) {
+        const resultado = await tx.produto.updateMany({
+          where: { id: item.produtoId, estoque: { gte: item.quantidade } },
+          data: { estoque: { decrement: item.quantidade } },
+        });
+        if (resultado.count === 0) {
+          throw new EstoqueInsuficienteError(item.produtoId);
+        }
+      }
 
-  res.status(201).json(pedido);
+      return tx.pedido.create({
+        data: {
+          nomeCliente,
+          telefone,
+          tipoEntrega,
+          endereco,
+          formaPagamento,
+          trocoPara,
+          observacoes,
+          total,
+          itens: {
+            create: itensPedidos.map((item) => ({
+              produtoId: item.produtoId,
+              quantidade: item.quantidade,
+              precoUnitario: mapaProdutos.get(item.produtoId)!.preco,
+            })),
+          },
+        },
+        include: { itens: { include: { produto: true } } },
+      });
+    });
+
+    res.status(201).json(pedido);
+  } catch (erro) {
+    if (erro instanceof EstoqueInsuficienteError) {
+      const produto = mapaProdutos.get(erro.produtoId);
+      res.status(400).json({ erro: `estoque insuficiente para "${produto?.nome ?? erro.produtoId}"` });
+      return;
+    }
+    throw erro;
+  }
 });
 
 // PATCH /pedidos/:id/status — protegida: só o lojista autenticado avança o pedido.

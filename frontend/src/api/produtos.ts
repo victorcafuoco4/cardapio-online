@@ -10,6 +10,7 @@ export type DadosProduto = {
   foto: string;
   categoriaId: number;
   ordem?: number;
+  estoque?: number;
 };
 
 export async function buscarProdutos(): Promise<Produto[]> {
