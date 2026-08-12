@@ -15,16 +15,28 @@ Durante o desenvolvimento, usamos dados fictícios da **Doralina Vegana** para t
 - **Banco de dados:** PostgreSQL (via Docker em desenvolvimento) + Prisma ORM
 - **Autenticação:** JWT + bcrypt
 
+## Como rodar
+
+### Backend
+
+```
+cd backend
+npm install
+npm run dev
+```
+
+Servidor sobe em `http://localhost:3333`.
+
 ## Status
 
-🚧 Em desenvolvimento — Etapa 2 concluída (interatividade com JavaScript puro: detalhes do produto e carrinho, veja `fundamentos/`).
+🚧 Em desenvolvimento — Etapa 3 concluída (primeiro servidor Node/Express em TypeScript, veja `backend/`).
 
 ## Etapas do projeto
 
 - [x] Etapa 0 — Ambiente e setup do repositório
 - [x] Etapa 1 — Cardápio estático em HTML/CSS
 - [x] Etapa 2 — Interatividade com JavaScript puro
-- [ ] Etapa 3 — Primeiro servidor Node/Express
+- [x] Etapa 3 — Primeiro servidor Node/Express
 - [ ] Etapa 4 — PostgreSQL + Prisma (modelagem inicial)
 - [ ] Etapa 5 — API de produtos (CRUD)
 - [ ] Etapa 6 — Migrar cardápio para React (Vite)
