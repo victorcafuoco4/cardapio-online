@@ -51,7 +51,7 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 10 concluída (painel do lojista com CRUD de produtos e categorias).
+🚧 Em desenvolvimento — Etapa 11 concluída (painel de gestão de pedidos: listar e avançar status).
 
 ### Lojista (demo)
 
@@ -91,11 +91,14 @@ Rotas de escrita (POST/PUT/DELETE) exigem `Authorization: Bearer <token>` — s�
 
 ### API de pedidos
 
-| Método | Rota           | Descrição                                                                 |
-|--------|----------------|-----------------------------------------------------------------------------|
-| GET    | `/pedidos`     | Lista pedidos (mais recentes primeiro)                                      |
-| GET    | `/pedidos/:id` | Busca um pedido                                                             |
-| POST   | `/pedidos`     | Cria um pedido — preços vêm do banco (snapshot em `itens_pedido`), nunca do cliente |
+`GET /pedidos/:id` é proposital e permanentemente pública — é o link de acompanhamento que o cliente vai usar pra ver o status do próprio pedido (Etapa 12), sem precisar de login. `GET /pedidos` (a lista completa) já expõe dados de todos os clientes, por isso é protegida.
+
+| Método | Rota                  | Descrição                                                                 |
+|--------|-----------------------|-----------------------------------------------------------------------------|
+| GET    | `/pedidos`            | Lista pedidos, mais recentes primeiro 🔒                                    |
+| GET    | `/pedidos/:id`        | Busca um pedido                                                             |
+| POST   | `/pedidos`            | Cria um pedido — preços vêm do banco (snapshot em `itens_pedido`), nunca do cliente |
+| PATCH  | `/pedidos/:id/status` | Atualiza o status do pedido 🔒                                              |
 
 ## Etapas do projeto
 
@@ -110,7 +113,7 @@ Rotas de escrita (POST/PUT/DELETE) exigem `Authorization: Bearer <token>` — s�
 - [x] Etapa 8 — API de pedidos
 - [x] Etapa 9 — Login do lojista (JWT + bcrypt)
 - [x] Etapa 10 — Painel: CRUD de produtos/categorias
-- [ ] Etapa 11 — Painel: gestão de pedidos
+- [x] Etapa 11 — Painel: gestão de pedidos
 - [ ] Etapa 12 — Acompanhamento de status pelo cliente
 - [ ] Etapa 13 — Estoque básico
 - [ ] Etapa 14 — Dashboard e financeiro básico

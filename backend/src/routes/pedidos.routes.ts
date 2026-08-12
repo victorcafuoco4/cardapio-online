@@ -1,14 +1,17 @@
 import { Router } from 'express';
 import { Prisma } from '../generated/prisma/client.js';
 import { prisma } from '../lib/prisma.js';
+import { autenticar } from '../middleware/autenticar.js';
 
 export const pedidosRouter = Router();
 
 const TIPOS_ENTREGA = ['RETIRADA', 'ENTREGA'] as const;
 const FORMAS_PAGAMENTO = ['DINHEIRO', 'CARTAO', 'PIX'] as const;
+const STATUS_PEDIDO = ['RECEBIDO', 'EM_PREPARO', 'PRONTO', 'ENTREGUE', 'CANCELADO'] as const;
 
-// GET /pedidos — lista pedidos, mais recentes primeiro.
-pedidosRouter.get('/', async (req, res) => {
+// GET /pedidos — lista pedidos, mais recentes primeiro. Protegida: é o painel de
+// gestão do lojista, expõe dados de clientes (nome, telefone, endereço).
+pedidosRouter.get('/', autenticar, async (req, res) => {
   const pedidos = await prisma.pedido.findMany({
     include: { itens: { include: { produto: true } } },
     orderBy: { criadoEm: 'desc' },
@@ -17,7 +20,8 @@ pedidosRouter.get('/', async (req, res) => {
   res.json(pedidos);
 });
 
-// GET /pedidos/:id
+// GET /pedidos/:id — pública de propósito: é o link de acompanhamento que o
+// cliente usa pra ver o status do próprio pedido (Etapa 12), sem precisar de login.
 pedidosRouter.get('/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
@@ -158,4 +162,34 @@ pedidosRouter.post('/', async (req, res) => {
   });
 
   res.status(201).json(pedido);
+});
+
+// PATCH /pedidos/:id/status — protegida: só o lojista autenticado avança o pedido.
+pedidosRouter.patch('/:id/status', autenticar, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    res.status(400).json({ erro: 'id inválido' });
+    return;
+  }
+
+  const { status } = req.body ?? {};
+  if (typeof status !== 'string' || !STATUS_PEDIDO.includes(status as (typeof STATUS_PEDIDO)[number])) {
+    res.status(400).json({ erro: `status deve ser um de: ${STATUS_PEDIDO.join(', ')}` });
+    return;
+  }
+
+  try {
+    const pedido = await prisma.pedido.update({
+      where: { id },
+      data: { status: status as (typeof STATUS_PEDIDO)[number] },
+      include: { itens: { include: { produto: true } } },
+    });
+    res.json(pedido);
+  } catch (erro) {
+    if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === 'P2025') {
+      res.status(404).json({ erro: 'pedido não encontrado' });
+      return;
+    }
+    throw erro;
+  }
 });

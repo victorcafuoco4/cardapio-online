@@ -1,4 +1,5 @@
-import type { DadosPedido, ItemCarrinho, PedidoResposta } from '../types';
+import { apiAutenticada } from './http';
+import type { DadosPedido, ItemCarrinho, PedidoResposta, StatusPedido } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -39,4 +40,16 @@ export async function criarPedido(dados: DadosPedido, itensCarrinho: ItemCarrinh
   }
 
   return resposta.json();
+}
+
+// Lista todos os pedidos — usada pelo painel do lojista (protegida no backend).
+export function buscarPedidos(): Promise<PedidoResposta[]> {
+  return apiAutenticada<PedidoResposta[]>('/pedidos');
+}
+
+export function atualizarStatusPedido(id: number, status: StatusPedido): Promise<PedidoResposta> {
+  return apiAutenticada<PedidoResposta>(`/pedidos/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
 }
