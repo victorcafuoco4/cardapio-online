@@ -17,19 +17,30 @@ Durante o desenvolvimento, usamos dados fictícios da **Doralina Vegana** para t
 
 ## Como rodar
 
+### Banco de dados (PostgreSQL via Docker)
+
+```
+docker compose up -d
+```
+
+Sobe um Postgres em `localhost:5432` (usuário/senha/banco: `cardapio`), com os dados persistidos num volume Docker.
+
 ### Backend
 
 ```
 cd backend
 npm install
+cp .env.example .env   # ajuste se necessário
+npm run db:migrate     # aplica as migrations do Prisma
+npm run db:seed        # popular com os dados de exemplo (Doralina Vegana)
 npm run dev
 ```
 
-Servidor sobe em `http://localhost:3333`.
+Servidor sobe em `http://localhost:3333`. Para explorar os dados visualmente, `npm run db:studio` abre o Prisma Studio.
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 3 concluída (primeiro servidor Node/Express em TypeScript, veja `backend/`).
+🚧 Em desenvolvimento — Etapa 4 concluída (PostgreSQL + Prisma, modelagem inicial de Categoria/Produto, veja `backend/prisma/`).
 
 ## Etapas do projeto
 
@@ -37,7 +48,7 @@ Servidor sobe em `http://localhost:3333`.
 - [x] Etapa 1 — Cardápio estático em HTML/CSS
 - [x] Etapa 2 — Interatividade com JavaScript puro
 - [x] Etapa 3 — Primeiro servidor Node/Express
-- [ ] Etapa 4 — PostgreSQL + Prisma (modelagem inicial)
+- [x] Etapa 4 — PostgreSQL + Prisma (modelagem inicial)
 - [ ] Etapa 5 — API de produtos (CRUD)
 - [ ] Etapa 6 — Migrar cardápio para React (Vite)
 - [ ] Etapa 7 — Carrinho e checkout completos
