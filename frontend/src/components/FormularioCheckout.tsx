@@ -5,6 +5,8 @@ import type { DadosPedido, FormaPagamento, TipoEntrega } from '../types';
 type FormularioCheckoutProps = {
   aoConfirmar: (dados: DadosPedido) => void;
   aoVoltar: () => void;
+  enviando: boolean;
+  erro: string | null;
 };
 
 type CamposFormulario = {
@@ -43,7 +45,7 @@ function validar(campos: CamposFormulario): Partial<Record<keyof CamposFormulari
   return erros;
 }
 
-export function FormularioCheckout({ aoConfirmar, aoVoltar }: FormularioCheckoutProps) {
+export function FormularioCheckout({ aoConfirmar, aoVoltar, enviando, erro }: FormularioCheckoutProps) {
   const [campos, setCampos] = useState<CamposFormulario>(CAMPOS_INICIAIS);
   const [erros, setErros] = useState<Partial<Record<keyof CamposFormulario, string>>>({});
 
@@ -191,12 +193,14 @@ export function FormularioCheckout({ aoConfirmar, aoVoltar }: FormularioCheckout
         />
       </div>
 
+      {erro && <p className="campo__erro campo__erro--envio">{erro}</p>}
+
       <div className="checkout__acoes">
-        <button type="button" className="botao-secundario" onClick={aoVoltar}>
+        <button type="button" className="botao-secundario" onClick={aoVoltar} disabled={enviando}>
           Voltar
         </button>
-        <button type="submit" className="dialog__adicionar">
-          Confirmar pedido
+        <button type="submit" className="dialog__adicionar" disabled={enviando}>
+          {enviando ? 'Enviando...' : 'Confirmar pedido'}
         </button>
       </div>
     </form>

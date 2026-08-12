@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { criarPedido } from '../api/pedidos';
 import { useCarrinho } from '../context/CarrinhoContext';
 import { formatarPreco } from '../utils/formatarPreco';
 import { FormularioCheckout } from './FormularioCheckout';
 import { ConfirmacaoPedido } from './ConfirmacaoPedido';
-import type { DadosPedido, PedidoFinalizado } from '../types';
+import type { DadosPedido, PedidoResposta } from '../types';
 
 type CarrinhoDialogProps = {
   aberto: boolean;
@@ -16,7 +17,9 @@ export function CarrinhoDialog({ aberto, aoFechar }: CarrinhoDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { itens, aumentarQuantidade, diminuirQuantidade, limparCarrinho, precoTotal } = useCarrinho();
   const [etapa, setEtapa] = useState<Etapa>('itens');
-  const [pedidoFinalizado, setPedidoFinalizado] = useState<PedidoFinalizado | null>(null);
+  const [pedidoConfirmado, setPedidoConfirmado] = useState<PedidoResposta | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [erroEnvio, setErroEnvio] = useState<string | null>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -33,17 +36,27 @@ export function CarrinhoDialog({ aberto, aoFechar }: CarrinhoDialogProps) {
   // pra reabrir do jeito esperado na próxima vez.
   function aoFecharDialog() {
     setEtapa('itens');
+    setErroEnvio(null);
     aoFechar();
   }
 
-  function confirmarPedido(dados: DadosPedido) {
-    setPedidoFinalizado({ itens, total: precoTotal, dados });
-    limparCarrinho();
-    setEtapa('confirmacao');
+  async function confirmarPedido(dados: DadosPedido) {
+    setEnviando(true);
+    setErroEnvio(null);
+    try {
+      const pedido = await criarPedido(dados, itens);
+      setPedidoConfirmado(pedido);
+      limparCarrinho();
+      setEtapa('confirmacao');
+    } catch (erro) {
+      setErroEnvio(erro instanceof Error ? erro.message : 'Não foi possível enviar o pedido.');
+    } finally {
+      setEnviando(false);
+    }
   }
 
   function novoPedido() {
-    setPedidoFinalizado(null);
+    setPedidoConfirmado(null);
     setEtapa('itens');
     dialogRef.current?.close();
   }
@@ -90,11 +103,16 @@ export function CarrinhoDialog({ aberto, aoFechar }: CarrinhoDialogProps) {
       )}
 
       {etapa === 'checkout' && (
-        <FormularioCheckout aoConfirmar={confirmarPedido} aoVoltar={() => setEtapa('itens')} />
+        <FormularioCheckout
+          aoConfirmar={confirmarPedido}
+          aoVoltar={() => setEtapa('itens')}
+          enviando={enviando}
+          erro={erroEnvio}
+        />
       )}
 
-      {etapa === 'confirmacao' && pedidoFinalizado && (
-        <ConfirmacaoPedido pedido={pedidoFinalizado} aoNovoPedido={novoPedido} />
+      {etapa === 'confirmacao' && pedidoConfirmado && (
+        <ConfirmacaoPedido pedido={pedidoConfirmado} aoNovoPedido={novoPedido} />
       )}
     </dialog>
   );

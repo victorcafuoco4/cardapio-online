@@ -1,80 +1,77 @@
-import type { PedidoFinalizado } from '../types';
+import type { PedidoResposta } from '../types';
 import { formatarPreco } from '../utils/formatarPreco';
 
 type ConfirmacaoPedidoProps = {
-  pedido: PedidoFinalizado;
+  pedido: PedidoResposta;
   aoNovoPedido: () => void;
 };
 
 const ROTULO_ENTREGA = {
-  retirada: 'Retirada no local',
-  entrega: 'Entrega',
+  RETIRADA: 'Retirada no local',
+  ENTREGA: 'Entrega',
 };
 
 const ROTULO_PAGAMENTO = {
-  dinheiro: 'Dinheiro',
-  cartao: 'Cartão na entrega',
-  pix: 'Pix',
+  DINHEIRO: 'Dinheiro',
+  CARTAO: 'Cartão na entrega',
+  PIX: 'Pix',
 };
 
 export function ConfirmacaoPedido({ pedido, aoNovoPedido }: ConfirmacaoPedidoProps) {
-  const { itens, total, dados } = pedido;
-
   return (
     <div className="confirmacao">
       <p className="confirmacao__icone" aria-hidden="true">
         ✓
       </p>
-      <h2>Pedido recebido!</h2>
-      <p className="confirmacao__aviso">
-        Essa é uma prévia do fluxo — o pedido ainda não é enviado pra cozinha (isso chega numa etapa futura do
-        projeto).
-      </p>
+      <h2>Pedido #{pedido.id} recebido!</h2>
+      <p className="confirmacao__aviso">Guarde esse número — é a referência do seu pedido.</p>
 
       <ul className="lista-carrinho">
-        {itens.map((item) => (
+        {pedido.itens.map((item) => (
           <li key={item.id} className="item-carrinho">
             <span className="item-carrinho__nome">
-              {item.quantidade}x {item.nome}
+              {item.quantidade}x {item.produto.nome}
             </span>
-            <span className="item-carrinho__subtotal">{formatarPreco(Number(item.preco) * item.quantidade)}</span>
+            <span className="item-carrinho__subtotal">
+              {formatarPreco(Number(item.precoUnitario) * item.quantidade)}
+            </span>
           </li>
         ))}
       </ul>
       <p className="carrinho__total-geral">
-        Total: <span>{formatarPreco(total)}</span>
+        Total: <span>{formatarPreco(Number(pedido.total))}</span>
       </p>
 
       <dl className="confirmacao__dados">
         <div>
           <dt>Nome</dt>
-          <dd>{dados.nomeCliente}</dd>
+          <dd>{pedido.nomeCliente}</dd>
         </div>
         <div>
           <dt>Telefone</dt>
-          <dd>{dados.telefone}</dd>
+          <dd>{pedido.telefone}</dd>
         </div>
         <div>
           <dt>Entrega</dt>
-          <dd>{ROTULO_ENTREGA[dados.tipoEntrega]}</dd>
+          <dd>{ROTULO_ENTREGA[pedido.tipoEntrega]}</dd>
         </div>
-        {dados.endereco && (
+        {pedido.endereco && (
           <div>
             <dt>Endereço</dt>
-            <dd>{dados.endereco}</dd>
+            <dd>{pedido.endereco}</dd>
           </div>
         )}
         <div>
           <dt>Pagamento</dt>
           <dd>
-            {ROTULO_PAGAMENTO[dados.formaPagamento]}
-            {dados.trocoPara && ` (troco para ${dados.trocoPara})`}
+            {ROTULO_PAGAMENTO[pedido.formaPagamento]}
+            {pedido.trocoPara && ` (troco para ${formatarPreco(Number(pedido.trocoPara))})`}
           </dd>
         </div>
-        {dados.observacoes && (
+        {pedido.observacoes && (
           <div>
             <dt>Observações</dt>
-            <dd>{dados.observacoes}</dd>
+            <dd>{pedido.observacoes}</dd>
           </div>
         )}
       </dl>

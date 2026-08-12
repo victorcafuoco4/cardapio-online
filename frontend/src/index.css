@@ -355,6 +355,13 @@ body {
   color: #a33;
 }
 
+.campo__erro--envio {
+  margin-top: 1rem;
+  padding: 0.6rem 0.75rem;
+  background-color: #fbe9e9;
+  border-radius: 6px;
+}
+
 .grupo-opcoes {
   display: flex;
   flex-direction: column;

@@ -83,6 +83,9 @@ const categorias = [
 
 async function main() {
   // Limpa antes de semear, para o seed poder ser rodado várias vezes sem duplicar dados.
+  // Pedidos referenciam produtos por FK, então precisam ser limpos primeiro.
+  await prisma.itemPedido.deleteMany();
+  await prisma.pedido.deleteMany();
   await prisma.produto.deleteMany();
   await prisma.categoria.deleteMany();
 

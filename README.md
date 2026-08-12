@@ -51,7 +51,7 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 7 concluída (carrinho com checkout completo: dados do cliente, retirada/entrega, forma de pagamento e confirmação — ainda sem persistir no backend, isso é a Etapa 8).
+🚧 Em desenvolvimento — Etapa 8 concluída (API de pedidos: o checkout do frontend agora persiste de verdade no Postgres).
 
 ### API de produtos
 
@@ -63,6 +63,14 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 | PUT    | `/produtos/:id` | Atualiza um produto (parcial: só os campos enviados)     |
 | DELETE | `/produtos/:id` | Remove um produto                                         |
 
+### API de pedidos
+
+| Método | Rota           | Descrição                                                                 |
+|--------|----------------|-----------------------------------------------------------------------------|
+| GET    | `/pedidos`     | Lista pedidos (mais recentes primeiro)                                      |
+| GET    | `/pedidos/:id` | Busca um pedido                                                             |
+| POST   | `/pedidos`     | Cria um pedido — preços vêm do banco (snapshot em `itens_pedido`), nunca do cliente |
+
 ## Etapas do projeto
 
 - [x] Etapa 0 — Ambiente e setup do repositório
@@ -73,7 +81,7 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 - [x] Etapa 5 — API de produtos (CRUD)
 - [x] Etapa 6 — Migrar cardápio para React (Vite)
 - [x] Etapa 7 — Carrinho e checkout completos
-- [ ] Etapa 8 — API de pedidos
+- [x] Etapa 8 — API de pedidos
 - [ ] Etapa 9 — Login do lojista (JWT + bcrypt)
 - [ ] Etapa 10 — Painel: CRUD de produtos/categorias
 - [ ] Etapa 11 — Painel: gestão de pedidos

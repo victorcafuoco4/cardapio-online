@@ -30,8 +30,59 @@ model Produto {
   ordem       Int      @default(0)
   categoriaId Int
   categoria   Categoria @relation(fields: [categoriaId], references: [id])
+  itensPedido ItemPedido[]
   criadoEm    DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
   @@map("produtos")
+}
+
+enum TipoEntrega {
+  RETIRADA
+  ENTREGA
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  CARTAO
+  PIX
+}
+
+enum StatusPedido {
+  RECEBIDO
+  EM_PREPARO
+  PRONTO
+  ENTREGUE
+  CANCELADO
+}
+
+model Pedido {
+  id             Int            @id @default(autoincrement())
+  nomeCliente    String
+  telefone       String
+  tipoEntrega    TipoEntrega
+  endereco       String?
+  formaPagamento FormaPagamento
+  trocoPara      Decimal?       @db.Decimal(10, 2)
+  observacoes    String?
+  status         StatusPedido   @default(RECEBIDO)
+  total          Decimal        @db.Decimal(10, 2)
+  itens          ItemPedido[]
+  criadoEm       DateTime       @default(now())
+  atualizadoEm   DateTime       @updatedAt
+
+  @@map("pedidos")
+}
+
+model ItemPedido {
+  id            Int     @id @default(autoincrement())
+  pedidoId      Int
+  pedido        Pedido  @relation(fields: [pedidoId], references: [id])
+  produtoId     Int
+  produto       Produto @relation(fields: [produtoId], references: [id])
+  quantidade    Int
+  // Preço do produto no momento do pedido — não muda se o preço do produto mudar depois.
+  precoUnitario Decimal @db.Decimal(10, 2)
+
+  @@map("itens_pedido")
 }

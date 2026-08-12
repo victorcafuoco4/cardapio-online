@@ -23,7 +23,7 @@ export type ItemCarrinho = Produto & {
 export type TipoEntrega = 'retirada' | 'entrega';
 export type FormaPagamento = 'dinheiro' | 'cartao' | 'pix';
 
-// Formato pensado já pra bater com o que a API de pedidos (próxima etapa) vai esperar.
+// Dados coletados no formulário de checkout, no formato "de UI" (minúsculo).
 export type DadosPedido = {
   nomeCliente: string;
   telefone: string;
@@ -34,8 +34,28 @@ export type DadosPedido = {
   observacoes?: string;
 };
 
-export type PedidoFinalizado = {
-  itens: ItemCarrinho[];
-  total: number;
-  dados: DadosPedido;
+export type StatusPedido = 'RECEBIDO' | 'EM_PREPARO' | 'PRONTO' | 'ENTREGUE' | 'CANCELADO';
+
+export type ItemPedidoResposta = {
+  id: number;
+  produtoId: number;
+  quantidade: number;
+  precoUnitario: string;
+  produto: Produto;
+};
+
+// Formato devolvido pela API (POST/GET /pedidos) — enums em maiúsculo, como no banco.
+export type PedidoResposta = {
+  id: number;
+  nomeCliente: string;
+  telefone: string;
+  tipoEntrega: 'RETIRADA' | 'ENTREGA';
+  endereco: string | null;
+  formaPagamento: 'DINHEIRO' | 'CARTAO' | 'PIX';
+  trocoPara: string | null;
+  observacoes: string | null;
+  status: StatusPedido;
+  total: string;
+  criadoEm: string;
+  itens: ItemPedidoResposta[];
 };
