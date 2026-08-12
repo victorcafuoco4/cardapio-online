@@ -96,6 +96,22 @@ body {
   margin-top: auto;
 }
 
+.produto__botao {
+  align-self: flex-start;
+  border: 1px solid #2f5233;
+  background: none;
+  color: #2f5233;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.produto__botao:hover {
+  background-color: #2f5233;
+  color: white;
+}
+
 /* ---------- Rodapé ---------- */
 
 .rodape {
@@ -131,4 +147,151 @@ body {
   .lista-produtos {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* ---------- Modal de detalhes do produto ---------- */
+
+/* <dialog> já vem com estilo de "janela flutuante" e centralização do
+   navegador; aqui só ajustamos tamanho, espaçamento e bordas. */
+.dialog-produto,
+.dialog-carrinho {
+  border: none;
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: min(90vw, 380px);
+  max-height: 85vh;
+}
+
+/* ::backdrop é o fundo escurecido atrás do dialog quando ele é aberto
+   com showModal() — só existe pra elementos <dialog>. */
+.dialog-produto::backdrop,
+.dialog-carrinho::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.dialog__fechar {
+  float: right;
+  border: none;
+  background: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.dialog__foto {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+}
+
+.dialog-produto h3 {
+  margin-top: 0.75rem;
+}
+
+.dialog-produto p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.dialog__preco {
+  font-weight: bold;
+  color: #2f5233 !important;
+  font-size: 1.1rem;
+}
+
+.dialog__quantidade {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.dialog__quantidade button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.dialog__adicionar {
+  width: 100%;
+  margin-top: 1.25rem;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #2f5233;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* ---------- Barra fixa do carrinho ---------- */
+
+.barra-carrinho {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  background-color: #2f5233;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.9rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* ---------- Modal do carrinho ---------- */
+
+.lista-carrinho {
+  list-style: none;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.item-carrinho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.item-carrinho__nome {
+  flex: 1;
+}
+
+.item-carrinho__controles {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.item-carrinho__controles button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.carrinho__total-geral {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eee;
+  font-weight: bold;
+  text-align: right;
 }
