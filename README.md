@@ -51,7 +51,7 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 6 concluída (cardápio migrado pra React + Vite, consumindo a API de produtos, veja `frontend/src/`).
+🚧 Em desenvolvimento — Etapa 7 concluída (carrinho com checkout completo: dados do cliente, retirada/entrega, forma de pagamento e confirmação — ainda sem persistir no backend, isso é a Etapa 8).
 
 ### API de produtos
 
@@ -72,7 +72,7 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 - [x] Etapa 4 — PostgreSQL + Prisma (modelagem inicial)
 - [x] Etapa 5 — API de produtos (CRUD)
 - [x] Etapa 6 — Migrar cardápio para React (Vite)
-- [ ] Etapa 7 — Carrinho e checkout completos
+- [x] Etapa 7 — Carrinho e checkout completos
 - [ ] Etapa 8 — API de pedidos
 - [ ] Etapa 9 — Login do lojista (JWT + bcrypt)
 - [ ] Etapa 10 — Painel: CRUD de produtos/categorias

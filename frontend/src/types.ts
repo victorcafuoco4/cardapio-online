@@ -19,3 +19,23 @@ export type Produto = {
 export type ItemCarrinho = Produto & {
   quantidade: number;
 };
+
+export type TipoEntrega = 'retirada' | 'entrega';
+export type FormaPagamento = 'dinheiro' | 'cartao' | 'pix';
+
+// Formato pensado já pra bater com o que a API de pedidos (próxima etapa) vai esperar.
+export type DadosPedido = {
+  nomeCliente: string;
+  telefone: string;
+  tipoEntrega: TipoEntrega;
+  endereco?: string;
+  formaPagamento: FormaPagamento;
+  trocoPara?: string;
+  observacoes?: string;
+};
+
+export type PedidoFinalizado = {
+  itens: ItemCarrinho[];
+  total: number;
+  dados: DadosPedido;
+};

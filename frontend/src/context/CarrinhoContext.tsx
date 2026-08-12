@@ -7,6 +7,7 @@ type CarrinhoContextValor = {
   adicionarItem: (produto: Produto, quantidade: number) => void;
   aumentarQuantidade: (produtoId: number) => void;
   diminuirQuantidade: (produtoId: number) => void;
+  limparCarrinho: () => void;
   quantidadeTotal: number;
   precoTotal: number;
 };
@@ -43,6 +44,10 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const limparCarrinho = useCallback(() => {
+    setItens([]);
+  }, []);
+
   const quantidadeTotal = useMemo(() => itens.reduce((total, item) => total + item.quantidade, 0), [itens]);
 
   const precoTotal = useMemo(
@@ -51,8 +56,16 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
   );
 
   const valor = useMemo(
-    () => ({ itens, adicionarItem, aumentarQuantidade, diminuirQuantidade, quantidadeTotal, precoTotal }),
-    [itens, adicionarItem, aumentarQuantidade, diminuirQuantidade, quantidadeTotal, precoTotal],
+    () => ({
+      itens,
+      adicionarItem,
+      aumentarQuantidade,
+      diminuirQuantidade,
+      limparCarrinho,
+      quantidadeTotal,
+      precoTotal,
+    }),
+    [itens, adicionarItem, aumentarQuantidade, diminuirQuantidade, limparCarrinho, quantidadeTotal, precoTotal],
   );
 
   return <CarrinhoContext.Provider value={valor}>{children}</CarrinhoContext.Provider>;

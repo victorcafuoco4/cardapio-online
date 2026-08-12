@@ -170,6 +170,7 @@ body {
   padding: 1.25rem;
   width: min(90vw, 380px);
   max-height: 85vh;
+  overflow-y: auto;
 }
 
 /* ::backdrop é o fundo escurecido atrás do dialog quando ele é aberto
@@ -241,6 +242,11 @@ body {
   cursor: pointer;
 }
 
+.dialog__adicionar:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
 /* ---------- Barra fixa do carrinho ---------- */
 
 .barra-carrinho {
@@ -303,5 +309,142 @@ body {
   padding-top: 0.75rem;
   border-top: 1px solid #eee;
   font-weight: bold;
+  text-align: right;
+}
+
+/* ---------- Formulário de checkout ---------- */
+
+.formulario-checkout h2 {
+  margin-top: 0.75rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.campo label,
+.campo__rotulo {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.campo input,
+.campo textarea {
+  font: inherit;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.campo input:focus,
+.campo textarea:focus {
+  outline: 2px solid #2f5233;
+  outline-offset: 1px;
+}
+
+.campo textarea {
+  resize: vertical;
+}
+
+.campo__erro {
+  font-size: 0.8rem;
+  color: #a33;
+}
+
+.grupo-opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.grupo-opcoes label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: #222;
+}
+
+.checkout__acoes {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.checkout__acoes .dialog__adicionar {
+  margin-top: 0;
+}
+
+.botao-secundario {
+  flex-shrink: 0;
+  border: 1px solid #ccc;
+  background: white;
+  color: #444;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* ---------- Confirmação do pedido ---------- */
+
+.confirmacao {
+  text-align: center;
+}
+
+.confirmacao__icone {
+  width: 48px;
+  height: 48px;
+  line-height: 48px;
+  margin: 0.5rem auto 0;
+  border-radius: 50%;
+  background-color: #2f5233;
+  color: white;
+  font-size: 1.4rem;
+}
+
+.confirmacao h2 {
+  margin-top: 0.75rem;
+}
+
+.confirmacao__aviso {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+.confirmacao .lista-carrinho,
+.confirmacao .carrinho__total-geral {
+  text-align: left;
+}
+
+.confirmacao__dados {
+  text-align: left;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eee;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.confirmacao__dados div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.confirmacao__dados dt {
+  color: #666;
+  flex-shrink: 0;
+}
+
+.confirmacao__dados dd {
   text-align: right;
 }
