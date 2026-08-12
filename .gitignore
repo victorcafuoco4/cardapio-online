@@ -1,0 +1,17 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (segredos: senhas, chaves de API)
+.env
+.env.local
+
+# Builds
+dist/
+build/
+
+# Logs
+*.log
+
+# Editor / SO
+.DS_Store
+.vscode/
