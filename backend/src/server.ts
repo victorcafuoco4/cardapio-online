@@ -1,9 +1,12 @@
+import cors from 'cors';
 import express from 'express';
 import { produtosRouter } from './routes/produtos.routes.js';
 
 const app = express();
 const PORTA = 3333;
 
+// Em dev, o frontend (Vite) roda em outra porta — precisa de CORS liberado pra chamar a API.
+app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {

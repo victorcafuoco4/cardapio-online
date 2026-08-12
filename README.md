@@ -10,7 +10,7 @@ Durante o desenvolvimento, usamos dados fictícios da **Doralina Vegana** para t
 
 ## Stack planejada
 
-- **Frontend:** HTML/CSS/JavaScript (fundamentos) → React + Vite + TypeScript (aplicação real)
+- **Frontend:** React + Vite + TypeScript (`frontend/`) — fundamentos em HTML/CSS/JS puro ficam em `fundamentos/`, como registro do aprendizado
 - **Backend:** Node.js + Express + TypeScript
 - **Banco de dados:** PostgreSQL (via Docker em desenvolvimento) + Prisma ORM
 - **Autenticação:** JWT + bcrypt
@@ -38,9 +38,20 @@ npm run dev
 
 Servidor sobe em `http://localhost:3333`. Para explorar os dados visualmente, `npm run db:studio` abre o Prisma Studio.
 
+### Frontend
+
+```
+cd frontend
+npm install
+cp .env.example .env   # ajuste se necessário
+npm run dev
+```
+
+Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
+
 ## Status
 
-🚧 Em desenvolvimento — Etapa 5 concluída (API REST de produtos com CRUD completo, veja `backend/src/routes/produtos.routes.ts`).
+🚧 Em desenvolvimento — Etapa 6 concluída (cardápio migrado pra React + Vite, consumindo a API de produtos, veja `frontend/src/`).
 
 ### API de produtos
 
@@ -60,7 +71,7 @@ Servidor sobe em `http://localhost:3333`. Para explorar os dados visualmente, `n
 - [x] Etapa 3 — Primeiro servidor Node/Express
 - [x] Etapa 4 — PostgreSQL + Prisma (modelagem inicial)
 - [x] Etapa 5 — API de produtos (CRUD)
-- [ ] Etapa 6 — Migrar cardápio para React (Vite)
+- [x] Etapa 6 — Migrar cardápio para React (Vite)
 - [ ] Etapa 7 — Carrinho e checkout completos
 - [ ] Etapa 8 — API de pedidos
 - [ ] Etapa 9 — Login do lojista (JWT + bcrypt)
