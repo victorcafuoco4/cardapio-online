@@ -51,7 +51,7 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 11 concluída (painel de gestão de pedidos: listar e avançar status).
+🚧 Em desenvolvimento — Etapa 12 concluída (acompanhamento de pedido pelo cliente em `/pedido/:id`, sem login).
 
 ### Lojista (demo)
 
@@ -114,7 +114,7 @@ Rotas de escrita (POST/PUT/DELETE) exigem `Authorization: Bearer <token>` — s�
 - [x] Etapa 9 — Login do lojista (JWT + bcrypt)
 - [x] Etapa 10 — Painel: CRUD de produtos/categorias
 - [x] Etapa 11 — Painel: gestão de pedidos
-- [ ] Etapa 12 — Acompanhamento de status pelo cliente
+- [x] Etapa 12 — Acompanhamento de status pelo cliente
 - [ ] Etapa 13 — Estoque básico
 - [ ] Etapa 14 — Dashboard e financeiro básico
 - [ ] Etapa 15 — Deploy

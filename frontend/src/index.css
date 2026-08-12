@@ -618,3 +618,106 @@ body {
   font-size: 0.8rem;
   cursor: pointer;
 }
+
+/* ---------- Acompanhamento do pedido ---------- */
+
+.pagina-acompanhamento {
+  min-height: 100svh;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+}
+
+.cartao-acompanhamento {
+  width: 100%;
+  max-width: 420px;
+  height: fit-content;
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.cartao-acompanhamento h1 {
+  font-size: 1.3rem;
+  color: #2f5233;
+}
+
+.etapas-status {
+  list-style: none;
+  margin: 1.5rem 0;
+}
+
+.etapa-status {
+  position: relative;
+  padding: 0 0 1.5rem 1.75rem;
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.etapa-status:last-child {
+  padding-bottom: 0;
+}
+
+.etapa-status::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 16px;
+  bottom: 0;
+  width: 2px;
+  background-color: #eee;
+}
+
+.etapa-status:last-child::before {
+  display: none;
+}
+
+.etapa-status__marcador {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  background-color: white;
+}
+
+.etapa-status--concluida,
+.etapa-status--atual {
+  color: #2f5233;
+}
+
+.etapa-status--atual {
+  font-weight: 600;
+}
+
+.etapa-status--concluida .etapa-status__marcador,
+.etapa-status--atual .etapa-status__marcador {
+  border-color: #2f5233;
+}
+
+.etapa-status--concluida .etapa-status__marcador {
+  background-color: #2f5233;
+}
+
+.etapa-status--concluida::before {
+  background-color: #2f5233;
+}
+
+.acompanhamento__cancelado {
+  margin: 1.5rem 0;
+  padding: 0.75rem;
+  background-color: #fbe9e9;
+  color: #a33;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.acompanhamento__voltar {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 1rem;
+}

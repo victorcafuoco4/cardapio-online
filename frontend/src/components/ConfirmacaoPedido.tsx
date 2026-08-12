@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { PedidoResposta } from '../types';
 import { formatarPreco } from '../utils/formatarPreco';
 
@@ -76,6 +77,9 @@ export function ConfirmacaoPedido({ pedido, aoNovoPedido }: ConfirmacaoPedidoPro
         )}
       </dl>
 
+      <Link to={`/pedido/${pedido.id}`} className="botao-secundario acompanhamento__voltar">
+        Acompanhar pedido
+      </Link>
       <button className="dialog__adicionar" onClick={aoNovoPedido}>
         Fazer novo pedido
       </button>

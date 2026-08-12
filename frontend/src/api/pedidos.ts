@@ -1,4 +1,4 @@
-import { apiAutenticada } from './http';
+import { apiAutenticada, apiPublica } from './http';
 import type { DadosPedido, ItemCarrinho, PedidoResposta, StatusPedido } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -40,6 +40,12 @@ export async function criarPedido(dados: DadosPedido, itensCarrinho: ItemCarrinh
   }
 
   return resposta.json();
+}
+
+// Busca um pedido pelo id — pública de propósito: é a página de acompanhamento
+// que o cliente acessa sem estar logado.
+export function buscarPedido(id: number): Promise<PedidoResposta> {
+  return apiPublica<PedidoResposta>(`/pedidos/${id}`);
 }
 
 // Lista todos os pedidos — usada pelo painel do lojista (protegida no backend).
