@@ -17,12 +17,12 @@ Durante o desenvolvimento, usamos dados fictícios da **Doralina Vegana** para t
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 0 (setup do ambiente e repositório).
+🚧 Em desenvolvimento — Etapa 1 concluída (cardápio estático em HTML/CSS, veja `fundamentos/`).
 
 ## Etapas do projeto
 
 - [x] Etapa 0 — Ambiente e setup do repositório
-- [ ] Etapa 1 — Cardápio estático em HTML/CSS
+- [x] Etapa 1 — Cardápio estático em HTML/CSS
 - [ ] Etapa 2 — Interatividade com JavaScript puro
 - [ ] Etapa 3 — Primeiro servidor Node/Express
 - [ ] Etapa 4 — PostgreSQL + Prisma (modelagem inicial)
