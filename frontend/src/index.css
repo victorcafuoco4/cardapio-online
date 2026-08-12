@@ -455,3 +455,62 @@ body {
 .confirmacao__dados dd {
   text-align: right;
 }
+
+/* ---------- Login do lojista ---------- */
+
+.pagina-login {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.cartao-login {
+  width: 100%;
+  max-width: 340px;
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.cartao-login h1 {
+  font-size: 1.3rem;
+  color: #2f5233;
+}
+
+.pagina-login__subtitulo {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+/* ---------- Painel do lojista ---------- */
+
+.painel-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background-color: #2f5233;
+  color: white;
+  padding: 1.25rem 1rem;
+}
+
+.painel-cabecalho h1 {
+  font-size: 1.2rem;
+}
+
+.painel-cabecalho .botao-secundario {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.6);
+  color: white;
+}
+
+.painel-conteudo {
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

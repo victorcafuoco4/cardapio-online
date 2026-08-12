@@ -74,6 +74,16 @@ model Pedido {
   @@map("pedidos")
 }
 
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  criadoEm  DateTime @default(now())
+
+  @@map("usuarios")
+}
+
 model ItemPedido {
   id            Int     @id @default(autoincrement())
   pedidoId      Int

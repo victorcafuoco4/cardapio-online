@@ -1,4 +1,12 @@
+import bcrypt from 'bcrypt';
 import { prisma } from '../src/lib/prisma.js';
+
+// Credenciais de demonstração — só pra ambiente de dev, documentadas no README.
+const LOJISTA_DEMO = {
+  nome: 'Dona Doralina',
+  email: 'dona@doralinavegana.com.br',
+  senha: 'doralina123',
+};
 
 const categorias = [
   {
@@ -82,6 +90,14 @@ const categorias = [
 ];
 
 async function main() {
+  // upsert (não delete+create) pro usuário demo: senha continua valendo entre execuções do seed.
+  const senhaHash = await bcrypt.hash(LOJISTA_DEMO.senha, 10);
+  await prisma.usuario.upsert({
+    where: { email: LOJISTA_DEMO.email },
+    update: { nome: LOJISTA_DEMO.nome, senhaHash },
+    create: { nome: LOJISTA_DEMO.nome, email: LOJISTA_DEMO.email, senhaHash },
+  });
+
   // Limpa antes de semear, para o seed poder ser rodado várias vezes sem duplicar dados.
   // Pedidos referenciam produtos por FK, então precisam ser limpos primeiro.
   await prisma.itemPedido.deleteMany();

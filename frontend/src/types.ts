@@ -59,3 +59,14 @@ export type PedidoResposta = {
   criadoEm: string;
   itens: ItemPedidoResposta[];
 };
+
+export type Usuario = {
+  id: number;
+  nome: string;
+  email: string;
+};
+
+export type RespostaLogin = {
+  token: string;
+  usuario: Usuario;
+};

@@ -51,7 +51,21 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 8 concluída (API de pedidos: o checkout do frontend agora persiste de verdade no Postgres).
+🚧 Em desenvolvimento — Etapa 9 concluída (login do lojista com JWT + bcrypt, rota `/painel` protegida no frontend).
+
+### Lojista (demo)
+
+Criado pelo seed (`npm run db:seed`). Login em `http://localhost:5173/painel/login`:
+
+- **Email:** `dona@doralinavegana.com.br`
+- **Senha:** `doralina123`
+
+### API de autenticação
+
+| Método | Rota         | Descrição                                                      |
+|--------|--------------|-------------------------------------------------------------------|
+| POST   | `/auth/login`| Login (email + senha) — retorna um JWT válido por 7 dias          |
+| GET    | `/auth/me`   | Retorna o usuário autenticado (protegida, exige `Authorization: Bearer <token>`) |
 
 ### API de produtos
 
@@ -82,7 +96,7 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 - [x] Etapa 6 — Migrar cardápio para React (Vite)
 - [x] Etapa 7 — Carrinho e checkout completos
 - [x] Etapa 8 — API de pedidos
-- [ ] Etapa 9 — Login do lojista (JWT + bcrypt)
+- [x] Etapa 9 — Login do lojista (JWT + bcrypt)
 - [ ] Etapa 10 — Painel: CRUD de produtos/categorias
 - [ ] Etapa 11 — Painel: gestão de pedidos
 - [ ] Etapa 12 — Acompanhamento de status pelo cliente
