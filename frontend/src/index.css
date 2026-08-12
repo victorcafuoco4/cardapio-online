@@ -333,15 +333,18 @@ body {
 }
 
 .campo input,
-.campo textarea {
+.campo textarea,
+.campo select {
   font: inherit;
   padding: 0.6rem 0.7rem;
   border: 1px solid #ccc;
   border-radius: 6px;
+  background-color: white;
 }
 
 .campo input:focus,
-.campo textarea:focus {
+.campo textarea:focus,
+.campo select:focus {
   outline: 2px solid #2f5233;
   outline-offset: 1px;
 }
@@ -502,10 +505,40 @@ body {
   font-size: 1.2rem;
 }
 
+.painel-cabecalho__usuario {
+  font-size: 0.8rem;
+  color: #b6e2b0;
+  margin-top: 0.15rem;
+}
+
 .painel-cabecalho .botao-secundario {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.6);
   color: white;
+}
+
+.painel-abas {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: white;
+}
+
+.painel-abas button {
+  border: none;
+  background: none;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.painel-abas button.ativa {
+  color: #2f5233;
+  font-weight: 600;
+  border-bottom-color: #2f5233;
 }
 
 .painel-conteudo {
@@ -513,4 +546,62 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.painel-secao__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.painel-secao__cabecalho h2 {
+  font-size: 1.1rem;
+}
+
+.botao-primario {
+  border: none;
+  background-color: #2f5233;
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.tabela-painel {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+}
+
+.tabela-painel th,
+.tabela-painel td {
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.tabela-painel tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabela-painel__acoes {
+  display: flex;
+  gap: 0.5rem;
+  text-align: right;
+}
+
+.tabela-painel__acoes button {
+  border: 1px solid #ccc;
+  background: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
 }

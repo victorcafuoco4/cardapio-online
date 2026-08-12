@@ -1,9 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { buscarPerfil, login as loginApi } from '../api/auth';
+import { obterToken, removerToken, salvarToken } from '../auth/token';
 import type { Usuario } from '../types';
-
-const CHAVE_TOKEN = 'cardapio-online:token';
 
 type AuthContextValor = {
   usuario: Usuario | null;
@@ -21,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem(CHAVE_TOKEN);
+    const token = obterToken();
     if (!token) {
       setCarregando(false);
       return;
@@ -29,18 +28,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     buscarPerfil(token)
       .then(setUsuario)
-      .catch(() => localStorage.removeItem(CHAVE_TOKEN))
+      .catch(() => removerToken())
       .finally(() => setCarregando(false));
   }, []);
 
   const entrar = useCallback(async (email: string, senha: string) => {
     const resposta = await loginApi(email, senha);
-    localStorage.setItem(CHAVE_TOKEN, resposta.token);
+    salvarToken(resposta.token);
     setUsuario(resposta.usuario);
   }, []);
 
   const sair = useCallback(() => {
-    localStorage.removeItem(CHAVE_TOKEN);
+    removerToken();
     setUsuario(null);
   }, []);
 

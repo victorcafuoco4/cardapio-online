@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Prisma } from '../generated/prisma/client.js';
 import { prisma } from '../lib/prisma.js';
+import { autenticar } from '../middleware/autenticar.js';
 
 export const produtosRouter = Router();
 
@@ -83,8 +84,8 @@ function validarCamposProduto(corpo: CorpoProduto, { parcial }: { parcial: boole
   return erros;
 }
 
-// POST /produtos
-produtosRouter.post('/', async (req, res) => {
+// POST /produtos — protegida: só o lojista autenticado pode criar produtos.
+produtosRouter.post('/', autenticar, async (req, res) => {
   const erros = validarCamposProduto(req.body ?? {}, { parcial: false });
   if (erros.length > 0) {
     res.status(400).json({ erros });
@@ -108,7 +109,8 @@ produtosRouter.post('/', async (req, res) => {
 });
 
 // PUT /produtos/:id — atualização parcial: só os campos enviados no corpo são alterados.
-produtosRouter.put('/:id', async (req, res) => {
+// Protegida: só o lojista autenticado pode editar produtos.
+produtosRouter.put('/:id', autenticar, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
     res.status(400).json({ erro: 'id inválido' });
@@ -155,8 +157,8 @@ produtosRouter.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /produtos/:id
-produtosRouter.delete('/:id', async (req, res) => {
+// DELETE /produtos/:id — protegida: só o lojista autenticado pode remover produtos.
+produtosRouter.delete('/:id', autenticar, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
     res.status(400).json({ erro: 'id inválido' });
@@ -167,9 +169,15 @@ produtosRouter.delete('/:id', async (req, res) => {
     await prisma.produto.delete({ where: { id } });
     res.status(204).send();
   } catch (erro) {
-    if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === 'P2025') {
-      res.status(404).json({ erro: 'produto não encontrado' });
-      return;
+    if (erro instanceof Prisma.PrismaClientKnownRequestError) {
+      if (erro.code === 'P2025') {
+        res.status(404).json({ erro: 'produto não encontrado' });
+        return;
+      }
+      if (erro.code === 'P2003') {
+        res.status(400).json({ erro: 'produto possui pedidos vinculados e não pode ser removido' });
+        return;
+      }
     }
     throw erro;
   }

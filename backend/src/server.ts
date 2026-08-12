@@ -2,6 +2,7 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import { authRouter } from './routes/auth.routes.js';
+import { categoriasRouter } from './routes/categorias.routes.js';
 import { pedidosRouter } from './routes/pedidos.routes.js';
 import { produtosRouter } from './routes/produtos.routes.js';
 
@@ -17,6 +18,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/produtos', produtosRouter);
+app.use('/categorias', categoriasRouter);
 app.use('/pedidos', pedidosRouter);
 app.use('/auth', authRouter);
 

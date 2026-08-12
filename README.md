@@ -51,7 +51,7 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 9 concluída (login do lojista com JWT + bcrypt, rota `/painel` protegida no frontend).
+🚧 Em desenvolvimento — Etapa 10 concluída (painel do lojista com CRUD de produtos e categorias).
 
 ### Lojista (demo)
 
@@ -69,13 +69,25 @@ Criado pelo seed (`npm run db:seed`). Login em `http://localhost:5173/painel/log
 
 ### API de produtos
 
+Rotas de escrita (POST/PUT/DELETE) exigem `Authorization: Bearer <token>` — só o lojista logado pode alterar o cardápio.
+
 | Método | Rota            | Descrição                                              |
 |--------|-----------------|---------------------------------------------------------|
 | GET    | `/produtos`     | Lista produtos (aceita `?categoriaId=`)                 |
 | GET    | `/produtos/:id` | Busca um produto                                         |
-| POST   | `/produtos`     | Cria um produto                                          |
-| PUT    | `/produtos/:id` | Atualiza um produto (parcial: só os campos enviados)     |
-| DELETE | `/produtos/:id` | Remove um produto                                         |
+| POST   | `/produtos`     | Cria um produto 🔒                                       |
+| PUT    | `/produtos/:id` | Atualiza um produto (parcial) 🔒                         |
+| DELETE | `/produtos/:id` | Remove um produto 🔒                                     |
+
+### API de categorias
+
+| Método | Rota              | Descrição                                              |
+|--------|-------------------|---------------------------------------------------------|
+| GET    | `/categorias`     | Lista categorias                                         |
+| GET    | `/categorias/:id` | Busca uma categoria                                       |
+| POST   | `/categorias`     | Cria uma categoria 🔒                                     |
+| PUT    | `/categorias/:id` | Atualiza uma categoria (parcial) 🔒                       |
+| DELETE | `/categorias/:id` | Remove uma categoria 🔒 (bloqueado se houver produtos vinculados) |
 
 ### API de pedidos
 
@@ -97,7 +109,7 @@ Criado pelo seed (`npm run db:seed`). Login em `http://localhost:5173/painel/log
 - [x] Etapa 7 — Carrinho e checkout completos
 - [x] Etapa 8 — API de pedidos
 - [x] Etapa 9 — Login do lojista (JWT + bcrypt)
-- [ ] Etapa 10 — Painel: CRUD de produtos/categorias
+- [x] Etapa 10 — Painel: CRUD de produtos/categorias
 - [ ] Etapa 11 — Painel: gestão de pedidos
 - [ ] Etapa 12 — Acompanhamento de status pelo cliente
 - [ ] Etapa 13 — Estoque básico
