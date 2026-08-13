@@ -20,7 +20,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: https://cardapio-online-frontend.onrender.com
+        value: https://cardapio-online-frontend-hgrc.onrender.com
       - key: NODE_ENV
         value: production
 

@@ -13,14 +13,26 @@ export type DadosProduto = {
   estoque?: number;
 };
 
+// Cold start do free tier do Render pode levar até ~50s pra acordar o backend;
+// sem esse limite, a tela fica presa em "Carregando cardápio..." indefinidamente
+// se a requisição nunca chegar a resolver.
+const TIMEOUT_CARDAPIO_MS = 60_000;
+
 export async function buscarProdutos(): Promise<Produto[]> {
-  const resposta = await fetch(`${API_URL}/produtos`);
+  const controlador = new AbortController();
+  const timeoutId = setTimeout(() => controlador.abort(), TIMEOUT_CARDAPIO_MS);
 
-  if (!resposta.ok) {
-    throw new Error('Não foi possível carregar o cardápio.');
+  try {
+    const resposta = await fetch(`${API_URL}/produtos`, { signal: controlador.signal });
+
+    if (!resposta.ok) {
+      throw new Error('Não foi possível carregar o cardápio.');
+    }
+
+    return await resposta.json();
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return resposta.json();
 }
 
 export function criarProduto(dados: DadosProduto): Promise<Produto> {
