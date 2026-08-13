@@ -728,10 +728,11 @@ body {
 .etapa-status--concluida .etapa-status__marcador,
 .etapa-status--atual .etapa-status__marcador {
   border-color: #2f5233;
+  background-color: #2f5233;
 }
 
-.etapa-status--concluida .etapa-status__marcador {
-  background-color: #2f5233;
+.etapa-status--atual .etapa-status__marcador {
+  box-shadow: 0 0 0 3px rgba(47, 82, 51, 0.25);
 }
 
 .etapa-status--concluida::before {
