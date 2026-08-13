@@ -6,8 +6,8 @@ import { autenticar } from '../middleware/autenticar.js';
 export const pedidosRouter = Router();
 
 const TIPOS_ENTREGA = ['RETIRADA', 'ENTREGA'] as const;
-const FORMAS_PAGAMENTO = ['DINHEIRO', 'CARTAO', 'PIX'] as const;
-const STATUS_PEDIDO = ['RECEBIDO', 'EM_PREPARO', 'PRONTO', 'ENTREGUE', 'CANCELADO'] as const;
+export const FORMAS_PAGAMENTO = ['DINHEIRO', 'CARTAO', 'PIX'] as const;
+export const STATUS_PEDIDO = ['RECEBIDO', 'EM_PREPARO', 'PRONTO', 'ENTREGUE', 'CANCELADO'] as const;
 
 class EstoqueInsuficienteError extends Error {
   constructor(public produtoId: number) {

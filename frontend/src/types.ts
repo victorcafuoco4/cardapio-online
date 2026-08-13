@@ -71,3 +71,24 @@ export type RespostaLogin = {
   token: string;
   usuario: Usuario;
 };
+
+export type ProdutoMaisVendido = {
+  nome: string;
+  quantidade: number;
+  receita: string;
+};
+
+export type FaturamentoDia = {
+  data: string;
+  total: string;
+};
+
+export type ResumoDashboard = {
+  totalPedidos: number;
+  faturamentoTotal: string;
+  ticketMedio: string;
+  pedidosPorStatus: Record<StatusPedido, number>;
+  faturamentoPorFormaPagamento: Record<'DINHEIRO' | 'CARTAO' | 'PIX', string>;
+  produtosMaisVendidos: ProdutoMaisVendido[];
+  faturamentoPorDia: FaturamentoDia[];
+};

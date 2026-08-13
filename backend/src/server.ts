@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import { authRouter } from './routes/auth.routes.js';
 import { categoriasRouter } from './routes/categorias.routes.js';
+import { dashboardRouter } from './routes/dashboard.routes.js';
 import { pedidosRouter } from './routes/pedidos.routes.js';
 import { produtosRouter } from './routes/produtos.routes.js';
 
@@ -21,6 +22,7 @@ app.use('/produtos', produtosRouter);
 app.use('/categorias', categoriasRouter);
 app.use('/pedidos', pedidosRouter);
 app.use('/auth', authRouter);
+app.use('/dashboard', dashboardRouter);
 
 // Middleware de erro: Express 5 encaminha automaticamente exceções e promises
 // rejeitadas das rotas assíncronas pra cá. Erros "esperados" do próprio Express

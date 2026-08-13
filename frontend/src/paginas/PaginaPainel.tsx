@@ -2,15 +2,16 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PainelCategorias } from './painel/PainelCategorias';
+import { PainelDashboard } from './painel/PainelDashboard';
 import { PainelPedidos } from './painel/PainelPedidos';
 import { PainelProdutos } from './painel/PainelProdutos';
 
-type Aba = 'produtos' | 'categorias' | 'pedidos';
+type Aba = 'dashboard' | 'produtos' | 'categorias' | 'pedidos';
 
 export function PaginaPainel() {
   const { usuario, sair } = useAuth();
   const navigate = useNavigate();
-  const [aba, setAba] = useState<Aba>('pedidos');
+  const [aba, setAba] = useState<Aba>('dashboard');
 
   function aoSair() {
     sair();
@@ -30,6 +31,9 @@ export function PaginaPainel() {
       </header>
 
       <nav className="painel-abas">
+        <button className={aba === 'dashboard' ? 'ativa' : ''} onClick={() => setAba('dashboard')}>
+          Dashboard
+        </button>
         <button className={aba === 'pedidos' ? 'ativa' : ''} onClick={() => setAba('pedidos')}>
           Pedidos
         </button>
@@ -42,6 +46,7 @@ export function PaginaPainel() {
       </nav>
 
       <main className="painel-conteudo">
+        {aba === 'dashboard' && <PainelDashboard />}
         {aba === 'pedidos' && <PainelPedidos />}
         {aba === 'produtos' && <PainelProdutos />}
         {aba === 'categorias' && <PainelCategorias />}

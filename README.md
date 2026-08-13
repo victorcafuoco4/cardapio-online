@@ -51,11 +51,11 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
 ## Status
 
-🚧 Em desenvolvimento — Etapa 13 concluída (estoque básico: cada produto tem uma quantidade disponível, decrementada de forma atômica a cada pedido).
+🚧 Em desenvolvimento — Etapa 14 concluída (dashboard financeiro no painel: faturamento, ticket médio, produtos mais vendidos, gráficos).
 
 ### Lojista (demo)
 
-Criado pelo seed (`npm run db:seed`). Login em `http://localhost:5173/painel/login`:
+Criado pelo seed (`npm run db:seed`), junto com 10 pedidos de exemplo espalhados pelos últimos 14 dias (pra o dashboard já vir com dado real). Login em `http://localhost:5173/painel/login`:
 
 - **Email:** `dona@doralinavegana.com.br`
 - **Senha:** `doralina123`
@@ -102,6 +102,10 @@ Cada produto tem um `estoque` (inteiro, padrão 0). Ao criar um pedido, o backen
 | POST   | `/pedidos`            | Cria um pedido — preços vêm do banco (snapshot em `itens_pedido`), nunca do cliente |
 | PATCH  | `/pedidos/:id/status` | Atualiza o status do pedido 🔒                                              |
 
+### API de dashboard
+
+`GET /dashboard` 🔒 — resumo financeiro e operacional pro painel: faturamento total, ticket médio, contagem de pedidos por status, faturamento por forma de pagamento, top 5 produtos mais vendidos e faturamento diário dos últimos 14 dias (zero-preenchido nos dias sem pedido). Pedidos cancelados contam na contagem por status, mas ficam fora de todo cálculo de faturamento.
+
 ## Etapas do projeto
 
 - [x] Etapa 0 — Ambiente e setup do repositório
@@ -118,5 +122,5 @@ Cada produto tem um `estoque` (inteiro, padrão 0). Ao criar um pedido, o backen
 - [x] Etapa 11 — Painel: gestão de pedidos
 - [x] Etapa 12 — Acompanhamento de status pelo cliente
 - [x] Etapa 13 — Estoque básico
-- [ ] Etapa 14 — Dashboard e financeiro básico
+- [x] Etapa 14 — Dashboard e financeiro básico
 - [ ] Etapa 15 — Deploy

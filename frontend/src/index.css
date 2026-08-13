@@ -748,3 +748,175 @@ body {
   text-decoration: none;
   margin-top: 1rem;
 }
+
+/* ---------- Dashboard financeiro ----------
+   Cores validadas pela skill de dataviz (six-checks: banda de luminosidade,
+   piso de croma, separação CVD all-pairs, contraste). --dash-serie-1/2/3 são os
+   3 primeiros slots da paleta categórica padrão — os únicos 3 que passam no
+   teste all-pairs nos dois modos. --dash-serie-dia reusa o verde da marca:
+   série única, sem necessidade de passar pelo validador categórico. */
+
+.painel-dashboard {
+  --dash-text-secondary: #52514e;
+  --dash-text-muted: #898781;
+  --dash-grid: #e1e0d9;
+  --dash-axis: #c3c2b7;
+  --dash-serie-dia: #2f5233;
+  --dash-serie-1: #2a78d6;
+  --dash-serie-2: #eb6834;
+  --dash-serie-3: #1baf7a;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.stat-tile {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-tile__rotulo {
+  font-size: 0.8rem;
+  color: var(--dash-text-secondary);
+}
+
+.stat-tile__valor {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #0b0b0b;
+  margin-top: 0.25rem;
+}
+
+.grafico-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.grafico-card h3 {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.grafico-card__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.grafico-card__alternar {
+  flex-shrink: 0;
+  border: 1px solid #ccc;
+  background: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.grafico-diario {
+  position: relative;
+}
+
+.grafico-diario svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.grafico-grade {
+  stroke: var(--dash-grid);
+  stroke-width: 1;
+}
+
+.grafico-eixo-base {
+  stroke: var(--dash-axis);
+  stroke-width: 1;
+}
+
+.grafico-eixo-texto {
+  fill: var(--dash-text-muted);
+  font-size: 9px;
+}
+
+.grafico-barra {
+  fill: var(--dash-serie-dia);
+}
+
+.grafico-barra--ativa {
+  fill: #24401f;
+}
+
+.grafico-tooltip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  background-color: #0b0b0b;
+  color: white;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.grafico-tooltip strong {
+  font-size: 0.85rem;
+}
+
+.grafico-barras-horizontais {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.grafico-barra-h {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.grafico-barra-h__rotulo {
+  color: #333;
+}
+
+.grafico-barra-h__trilho {
+  height: 18px;
+  background-color: #f2f1ee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.grafico-barra-h__preenchimento {
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  transition: width 0.3s ease;
+}
+
+.grafico-barra-h__valor {
+  font-weight: 600;
+  color: #0b0b0b;
+  text-align: right;
+  min-width: 64px;
+}
