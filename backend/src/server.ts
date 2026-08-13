@@ -8,10 +8,12 @@ import { pedidosRouter } from './routes/pedidos.routes.js';
 import { produtosRouter } from './routes/produtos.routes.js';
 
 const app = express();
-const PORTA = 3333;
+const PORTA = process.env.PORT ? Number(process.env.PORT) : 3333;
 
-// Em dev, o frontend (Vite) roda em outra porta — precisa de CORS liberado pra chamar a API.
-app.use(cors());
+// Em dev (sem CORS_ORIGIN configurado), libera geral — o frontend roda em outra porta.
+// Em produção, CORS_ORIGIN restringe às origens do frontend hospedado (separadas por vírgula).
+const origensPermitidas = process.env.CORS_ORIGIN?.split(',').map((origem) => origem.trim());
+app.use(cors({ origin: origensPermitidas ?? true }));
 app.use(express.json());
 
 app.get('/', (req, res) => {

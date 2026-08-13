@@ -49,6 +49,23 @@ npm run dev
 
 Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
+## Deploy (Render)
+
+O `render.yaml` na raiz descreve os 3 recursos como *Blueprint* — banco Postgres, backend (Node) e frontend (site estático). Passo a passo:
+
+1. Crie uma conta em [render.com](https://render.com) (ou faça login) e conecte sua conta do GitHub.
+2. No dashboard, **New → Blueprint**, selecione o repositório `cardapio-online`. O Render lê o `render.yaml` e mostra os 3 recursos que vai criar: `cardapio-online-db`, `cardapio-online-backend`, `cardapio-online-frontend`.
+3. Confira e clique em **Apply**. O Render cria o Postgres primeiro, depois builda o backend (rodando `prisma migrate deploy` automaticamente) e o frontend.
+4. Depois do primeiro deploy, popule o banco **uma única vez**: no serviço `cardapio-online-backend`, aba **Shell**, rode `npm run db:seed`.
+   ⚠️ Não deixe o seed rodando a cada deploy — ele apaga pedidos e produtos existentes antes de recriar os dados de exemplo.
+5. Acesse a URL do frontend (algo como `https://cardapio-online-frontend.onrender.com`) e teste o fluxo completo.
+
+**Vale saber:**
+- O plano gratuito "dorme" o backend depois de um tempo sem uso — a primeira requisição depois disso demora uns 30-60s pra acordar.
+- `JWT_SECRET` é gerado automaticamente pelo Render (`generateValue: true`), diferente do valor usado em desenvolvimento.
+- As URLs no `render.yaml` (`cardapio-online-backend.onrender.com`, `cardapio-online-frontend.onrender.com`) assumem que os nomes dos serviços não mudam durante o setup. Se o Render pedir nomes diferentes (já em uso por outra conta, por exemplo), ajuste `CORS_ORIGIN` (no backend) e `VITE_API_URL` (no frontend) nas variáveis de ambiente depois do primeiro deploy.
+- Nomes de plano e limites do free tier são da Render e podem mudar — confira no painel deles durante o setup.
+
 ## Status
 
 🚧 Em desenvolvimento — Etapa 14 concluída (dashboard financeiro no painel: faturamento, ticket médio, produtos mais vendidos, gráficos).
