@@ -22,16 +22,21 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
       const existente = atual.find((item) => item.id === produto.id);
       if (existente) {
         return atual.map((item) =>
-          item.id === produto.id ? { ...item, quantidade: item.quantidade + quantidade } : item,
+          item.id === produto.id
+            ? { ...item, quantidade: Math.min(item.quantidade + quantidade, produto.estoque) }
+            : item,
         );
       }
-      return [...atual, { ...produto, quantidade }];
+      return [...atual, { ...produto, quantidade: Math.min(quantidade, produto.estoque) }];
     });
   }, []);
 
+  // Nunca deixa passar do estoque disponível pra aquele produto.
   const aumentarQuantidade = useCallback((produtoId: number) => {
     setItens((atual) =>
-      atual.map((item) => (item.id === produtoId ? { ...item, quantidade: item.quantidade + 1 } : item)),
+      atual.map((item) =>
+        item.id === produtoId ? { ...item, quantidade: Math.min(item.quantidade + 1, item.estoque) } : item,
+      ),
     );
   }, []);
 

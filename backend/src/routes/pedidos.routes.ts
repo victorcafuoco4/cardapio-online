@@ -196,6 +196,8 @@ pedidosRouter.post('/', async (req, res) => {
 });
 
 // PATCH /pedidos/:id/status — protegida: só o lojista autenticado avança o pedido.
+// Cancelar devolve o estoque reservado pelo pedido; reativar um pedido cancelado
+// reserva o estoque de novo (podendo falhar, se não sobrou saldo suficiente).
 pedidosRouter.patch('/:id/status', autenticar, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
@@ -208,15 +210,60 @@ pedidosRouter.patch('/:id/status', autenticar, async (req, res) => {
     res.status(400).json({ erro: `status deve ser um de: ${STATUS_PEDIDO.join(', ')}` });
     return;
   }
+  const novoStatus = status as (typeof STATUS_PEDIDO)[number];
+
+  const pedidoAtual = await prisma.pedido.findUnique({
+    where: { id },
+    include: { itens: { include: { produto: true } } },
+  });
+  if (!pedidoAtual) {
+    res.status(404).json({ erro: 'pedido não encontrado' });
+    return;
+  }
+
+  const estavaCancelado = pedidoAtual.status === 'CANCELADO';
+  const vaiCancelar = novoStatus === 'CANCELADO';
 
   try {
-    const pedido = await prisma.pedido.update({
-      where: { id },
-      data: { status: status as (typeof STATUS_PEDIDO)[number] },
-      include: { itens: { include: { produto: true } } },
+    const pedido = await prisma.$transaction(async (tx) => {
+      if (!estavaCancelado && vaiCancelar) {
+        // Cancelando um pedido ativo: devolve pro estoque o que ele tinha reservado.
+        for (const item of pedidoAtual.itens) {
+          await tx.produto.update({
+            where: { id: item.produtoId },
+            data: { estoque: { increment: item.quantidade } },
+          });
+        }
+      } else if (estavaCancelado && !vaiCancelar) {
+        // Reativando um pedido cancelado: precisa reservar o estoque de novo,
+        // condicionado a ter saldo suficiente (mesma lógica atômica do POST /pedidos).
+        for (const item of pedidoAtual.itens) {
+          const resultado = await tx.produto.updateMany({
+            where: { id: item.produtoId, estoque: { gte: item.quantidade } },
+            data: { estoque: { decrement: item.quantidade } },
+          });
+          if (resultado.count === 0) {
+            throw new EstoqueInsuficienteError(item.produtoId);
+          }
+        }
+      }
+
+      return tx.pedido.update({
+        where: { id },
+        data: { status: novoStatus },
+        include: { itens: { include: { produto: true } } },
+      });
     });
+
     res.json(pedido);
   } catch (erro) {
+    if (erro instanceof EstoqueInsuficienteError) {
+      const item = pedidoAtual.itens.find((item) => item.produtoId === erro.produtoId);
+      res.status(400).json({
+        erro: `não é possível reativar o pedido: estoque insuficiente para "${item?.produto.nome ?? erro.produtoId}"`,
+      });
+      return;
+    }
     if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === 'P2025') {
       res.status(404).json({ erro: 'pedido não encontrado' });
       return;

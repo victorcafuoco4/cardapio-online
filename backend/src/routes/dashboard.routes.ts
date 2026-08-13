@@ -8,6 +8,18 @@ export const dashboardRouter = Router();
 
 const DIAS_HISTORICO = 14;
 
+// "YYYY-MM-DD" a partir do calendário LOCAL do servidor — nunca `toISOString()`,
+// que converte pra UTC e desloca o dia em fusos negativos (ex: um pedido feito
+// às 22h em São Paulo vira 01h UTC do dia seguinte). Usada tanto pra montar os
+// baldes de dia quanto pra encaixar cada pedido num deles, garantindo que os
+// dois lados concordem sobre o que é "o mesmo dia".
+function chaveDia(data: Date): string {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
 // GET /dashboard — resumo financeiro e operacional pro painel do lojista.
 // Totais (faturamento, ticket médio, produtos mais vendidos) são "de sempre";
 // o gráfico de faturamento por dia cobre só os últimos 14 dias, com zero
@@ -73,10 +85,10 @@ dashboardRouter.get('/', autenticar, async (req, res) => {
   for (let i = 0; i < DIAS_HISTORICO; i++) {
     const dia = new Date(desde);
     dia.setDate(dia.getDate() + i);
-    faturamentoPorDiaMapa.set(dia.toISOString().slice(0, 10), new Prisma.Decimal(0));
+    faturamentoPorDiaMapa.set(chaveDia(dia), new Prisma.Decimal(0));
   }
   for (const pedido of pedidos) {
-    const chave = pedido.criadoEm.toISOString().slice(0, 10);
+    const chave = chaveDia(pedido.criadoEm);
     const valorAtual = faturamentoPorDiaMapa.get(chave);
     if (valorAtual) {
       faturamentoPorDiaMapa.set(chave, valorAtual.plus(pedido.total));

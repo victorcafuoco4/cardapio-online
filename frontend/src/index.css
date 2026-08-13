@@ -326,6 +326,11 @@ body {
   cursor: pointer;
 }
 
+.item-carrinho__controles button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .carrinho__total-geral {
   margin-top: 1rem;
   padding-top: 0.75rem;

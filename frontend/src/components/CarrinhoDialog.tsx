@@ -79,7 +79,11 @@ export function CarrinhoDialog({ aberto, aoFechar }: CarrinhoDialogProps) {
                     −
                   </button>
                   <span>{item.quantidade}</span>
-                  <button aria-label="Aumentar quantidade" onClick={() => aumentarQuantidade(item.id)}>
+                  <button
+                    aria-label="Aumentar quantidade"
+                    onClick={() => aumentarQuantidade(item.id)}
+                    disabled={item.quantidade >= item.estoque}
+                  >
                     +
                   </button>
                 </div>
