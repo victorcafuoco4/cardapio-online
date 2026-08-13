@@ -16,6 +16,10 @@ const ROTULO_STATUS: Record<StatusPedido, string> = {
 const ROTULO_ENTREGA = { RETIRADA: 'Retirada', ENTREGA: 'Entrega' };
 const ROTULO_PAGAMENTO = { DINHEIRO: 'Dinheiro', CARTAO: 'Cartão', PIX: 'Pix' };
 
+// Atualiza sozinho a cada 15s, pra pedidos novos aparecerem sem precisar
+// clicar em "Atualizar" ou trocar de aba.
+const INTERVALO_ATUALIZACAO_MS = 15000;
+
 function formatarData(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
@@ -34,6 +38,8 @@ export function PainelPedidos() {
 
   useEffect(() => {
     carregar();
+    const intervalo = setInterval(carregar, INTERVALO_ATUALIZACAO_MS);
+    return () => clearInterval(intervalo);
   }, [carregar]);
 
   async function aoMudarStatus(pedido: PedidoResposta, novoStatus: StatusPedido) {

@@ -1,19 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { buscarResumoDashboard } from '../../api/dashboard';
 import { GraficoFaturamentoDiario } from '../../components/painel/GraficoFaturamentoDiario';
 import { GraficoFormaPagamento } from '../../components/painel/GraficoFormaPagamento';
 import { formatarPreco } from '../../utils/formatarPreco';
 import type { ResumoDashboard } from '../../types';
 
+// Atualiza sozinho a cada 15s — sem isso, o número de pedidos e os gráficos
+// ficam presos no snapshot do primeiro carregamento enquanto a aba Dashboard
+// continuar montada, mesmo que cheguem pedidos novos nesse meio-tempo.
+const INTERVALO_ATUALIZACAO_MS = 15000;
+
 export function PainelDashboard() {
   const [resumo, setResumo] = useState<ResumoDashboard | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
-  useEffect(() => {
+  const carregar = useCallback(() => {
     buscarResumoDashboard()
       .then(setResumo)
       .catch((erro) => setErro(erro instanceof Error ? erro.message : 'Não foi possível carregar o dashboard.'));
   }, []);
+
+  useEffect(() => {
+    carregar();
+    const intervalo = setInterval(carregar, INTERVALO_ATUALIZACAO_MS);
+    return () => clearInterval(intervalo);
+  }, [carregar]);
 
   if (erro) return <p className="estado estado--erro">{erro}</p>;
   if (!resumo) return <p className="estado">Carregando...</p>;
