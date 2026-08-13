@@ -35,7 +35,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        value: https://cardapio-online-backend.onrender.com
+        value: https://cardapio-online-backend-odg7.onrender.com
     routes:
       # SPA: qualquer caminho (/painel/login, /pedido/5, etc.) precisa servir o
       # index.html — quem decide a rota é o react-router, no navegador.
