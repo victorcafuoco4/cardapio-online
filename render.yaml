@@ -24,8 +24,12 @@ services:
       - key: NODE_ENV
         value: production
 
-  - type: static
+  # Site estático: type continua "web", quem diferencia é runtime: static.
+  # Sem campo "plan" — sites estáticos no Render não têm plano pago/gratuito,
+  # são sempre grátis, e declarar "plan" aqui (mesmo "free") é inválido.
+  - type: web
     name: cardapio-online-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
