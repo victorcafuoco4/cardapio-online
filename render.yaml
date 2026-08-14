@@ -10,10 +10,7 @@ services:
     runtime: node
     rootDir: backend
     plan: free
-    # TEMPORÁRIO: roda o backfill de entregueEm uma vez, depois da migration e
-    # antes do build. Remover a cláusula "&& npm run db:backfill-entregue-em"
-    # assim que os pedidos ENTREGUE legados estiverem confirmados com entregueEm.
-    buildCommand: npm install --include=dev && npx prisma migrate deploy && npm run db:backfill-entregue-em && npm run build
+    buildCommand: npm install && npx prisma migrate deploy && npm run build
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
