@@ -380,6 +380,21 @@ body {
   resize: vertical;
 }
 
+.campo--checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
+  color: #222;
+}
+
+.campo--checkbox input {
+  width: auto;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
 .campo__erro {
   font-size: 0.8rem;
   color: #a33;

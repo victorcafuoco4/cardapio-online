@@ -19,6 +19,7 @@ type Campos = {
   categoriaId: string;
   ordem: string;
   estoque: string;
+  disponivel: boolean;
 };
 
 const CAMPOS_VAZIOS: Campos = {
@@ -29,6 +30,7 @@ const CAMPOS_VAZIOS: Campos = {
   categoriaId: '',
   ordem: '',
   estoque: '0',
+  disponivel: true,
 };
 
 export function FormularioProdutoPainel({
@@ -59,6 +61,7 @@ export function FormularioProdutoPainel({
               categoriaId: String(produto.categoriaId),
               ordem: String(produto.ordem),
               estoque: String(produto.estoque),
+              disponivel: produto.disponivel,
             }
           : CAMPOS_VAZIOS,
       );
@@ -104,6 +107,7 @@ export function FormularioProdutoPainel({
       categoriaId,
       ordem: campos.ordem.trim() ? Number(campos.ordem) : undefined,
       estoque,
+      disponivel: campos.disponivel,
     };
 
     try {
@@ -206,6 +210,18 @@ export function FormularioProdutoPainel({
             value={campos.estoque}
             onChange={(e) => atualizarCampo('estoque', e.target.value)}
           />
+        </div>
+
+        <div className="campo campo--checkbox">
+          <label htmlFor="produto-disponivel">
+            <input
+              id="produto-disponivel"
+              type="checkbox"
+              checked={campos.disponivel}
+              onChange={(e) => atualizarCampo('disponivel', e.target.checked)}
+            />
+            Disponível para venda
+          </label>
         </div>
 
         {erro && <p className="campo__erro campo__erro--envio">{erro}</p>}

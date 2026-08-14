@@ -33,6 +33,8 @@ model Produto {
   foto        String
   ordem       Int      @default(0)
   estoque     Int      @default(0)
+  // Distinto de estoque: desativação manual do lojista, independente de saldo físico.
+  disponivel  Boolean  @default(true)
   categoriaId Int
   categoria   Categoria @relation(fields: [categoriaId], references: [id])
   itensPedido ItemPedido[]

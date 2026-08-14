@@ -15,6 +15,12 @@ class EstoqueInsuficienteError extends Error {
   }
 }
 
+class ProdutoIndisponivelError extends Error {
+  constructor(public produtoId: number) {
+    super(`produto indisponível: ${produtoId}`);
+  }
+}
+
 // GET /pedidos — lista pedidos, mais recentes primeiro. Protegida: é o painel de
 // gestão do lojista, expõe dados de clientes (nome, telefone, endereço).
 pedidosRouter.get('/', autenticar, async (req, res) => {
@@ -148,16 +154,27 @@ pedidosRouter.post('/', async (req, res) => {
 
   try {
     const pedido = await prisma.$transaction(async (tx) => {
-      // Decrementa o estoque de cada item condicionado a ter saldo suficiente.
-      // Esse where com "estoque >= quantidade" é o que torna a operação atômica:
-      // se dois pedidos chegarem ao mesmo tempo pro último item em estoque, só um
-      // dos updates afeta uma linha — o outro vê count 0 e cai no erro abaixo.
+      // Decrementa o estoque de cada item condicionado a disponivel=true e a ter
+      // saldo suficiente. Esse where é o que torna a operação atômica: se o
+      // lojista desativar o produto ou dois pedidos chegarem ao mesmo tempo pro
+      // último item em estoque, só um cenário passa — o outro vê count 0 e cai
+      // no erro abaixo.
       for (const item of itensPedidos) {
         const resultado = await tx.produto.updateMany({
-          where: { id: item.produtoId, estoque: { gte: item.quantidade } },
+          where: { id: item.produtoId, disponivel: true, estoque: { gte: item.quantidade } },
           data: { estoque: { decrement: item.quantidade } },
         });
         if (resultado.count === 0) {
+          // O where não bateu — falta de estoque ou o produto foi desativado
+          // nesse meio-tempo. Só nesse caminho de erro (raro) uma leitura extra
+          // diferencia qual dos dois foi, pra devolver a mensagem certa.
+          const produtoAtual = await tx.produto.findUnique({
+            where: { id: item.produtoId },
+            select: { disponivel: true, estoque: true },
+          });
+          if (!produtoAtual || !produtoAtual.disponivel) {
+            throw new ProdutoIndisponivelError(item.produtoId);
+          }
           throw new EstoqueInsuficienteError(item.produtoId);
         }
       }
@@ -186,6 +203,11 @@ pedidosRouter.post('/', async (req, res) => {
 
     res.status(201).json(pedido);
   } catch (erro) {
+    if (erro instanceof ProdutoIndisponivelError) {
+      const produto = mapaProdutos.get(erro.produtoId);
+      res.status(400).json({ erro: `produto indisponível: "${produto?.nome ?? erro.produtoId}"` });
+      return;
+    }
     if (erro instanceof EstoqueInsuficienteError) {
       const produto = mapaProdutos.get(erro.produtoId);
       res.status(400).json({ erro: `estoque insuficiente para "${produto?.nome ?? erro.produtoId}"` });

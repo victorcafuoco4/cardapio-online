@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FormularioProdutoPainel } from '../../components/painel/FormularioProdutoPainel';
 import { buscarCategorias } from '../../api/categorias';
-import { buscarProdutos, removerProduto } from '../../api/produtos';
+import { atualizarProduto, buscarProdutos, removerProduto } from '../../api/produtos';
 import { formatarPreco } from '../../utils/formatarPreco';
 import type { Categoria, Produto } from '../../types';
 
@@ -12,6 +12,7 @@ export function PainelProdutos() {
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
   const [formularioAberto, setFormularioAberto] = useState(false);
+  const [alternandoId, setAlternandoId] = useState<number | null>(null);
 
   const carregar = useCallback(() => {
     Promise.all([buscarProdutos(), buscarCategorias()])
@@ -48,6 +49,19 @@ export function PainelProdutos() {
     }
   }
 
+  async function alternarDisponibilidade(produto: Produto) {
+    setErroAcao(null);
+    setAlternandoId(produto.id);
+    try {
+      await atualizarProduto(produto.id, { disponivel: !produto.disponivel });
+      carregar();
+    } catch (erro) {
+      setErroAcao(erro instanceof Error ? erro.message : 'Não foi possível alterar a disponibilidade.');
+    } finally {
+      setAlternandoId(null);
+    }
+  }
+
   return (
     <div className="painel-secao">
       <div className="painel-secao__cabecalho">
@@ -69,6 +83,7 @@ export function PainelProdutos() {
               <th>Categoria</th>
               <th>Preço</th>
               <th>Estoque</th>
+              <th>Disponibilidade</th>
               <th aria-label="Ações"></th>
             </tr>
           </thead>
@@ -81,8 +96,14 @@ export function PainelProdutos() {
                 <td className={produto.estoque === 0 ? 'tabela-painel__esgotado' : undefined}>
                   {produto.estoque === 0 ? 'Esgotado' : produto.estoque}
                 </td>
+                <td className={produto.disponivel ? undefined : 'tabela-painel__esgotado'}>
+                  {produto.disponivel ? 'Disponível' : 'Indisponível'}
+                </td>
                 <td className="tabela-painel__acoes">
                   <button onClick={() => abrirEdicao(produto)}>Editar</button>
+                  <button onClick={() => alternarDisponibilidade(produto)} disabled={alternandoId === produto.id}>
+                    {produto.disponivel ? 'Desativar' : 'Ativar'}
+                  </button>
                   <button onClick={() => excluir(produto)}>Excluir</button>
                 </td>
               </tr>

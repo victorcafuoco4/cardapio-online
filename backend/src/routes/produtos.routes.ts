@@ -53,6 +53,7 @@ type CorpoProduto = {
   categoriaId?: unknown;
   ordem?: unknown;
   estoque?: unknown;
+  disponivel?: unknown;
 };
 
 // Valida os campos do corpo da requisição.
@@ -87,6 +88,10 @@ function validarCamposProduto(corpo: CorpoProduto, { parcial }: { parcial: boole
     'estoque deve ser um número inteiro maior ou igual a zero',
     { obrigatorio: false },
   );
+  // disponivel tem valor default no schema, então nunca é obrigatório — só validado se enviado.
+  validarCampo('disponivel', (v) => typeof v === 'boolean', 'disponivel deve ser um booleano', {
+    obrigatorio: false,
+  });
 
   return erros;
 }
@@ -99,7 +104,7 @@ produtosRouter.post('/', autenticar, async (req, res) => {
     return;
   }
 
-  const { nome, descricao, preco, foto, categoriaId, ordem, estoque } = req.body;
+  const { nome, descricao, preco, foto, categoriaId, ordem, estoque, disponivel } = req.body;
 
   const categoria = await prisma.categoria.findUnique({ where: { id: categoriaId } });
   if (!categoria) {
@@ -108,7 +113,7 @@ produtosRouter.post('/', autenticar, async (req, res) => {
   }
 
   const produto = await prisma.produto.create({
-    data: { nome, descricao, preco, foto, categoriaId, ordem, estoque },
+    data: { nome, descricao, preco, foto, categoriaId, ordem, estoque, disponivel },
     include: { categoria: true },
   });
 
@@ -139,7 +144,7 @@ produtosRouter.put('/:id', autenticar, async (req, res) => {
     }
   }
 
-  const { nome, descricao, preco, foto, categoriaId, ordem, estoque } = corpo as {
+  const { nome, descricao, preco, foto, categoriaId, ordem, estoque, disponivel } = corpo as {
     nome?: string;
     descricao?: string;
     preco?: number;
@@ -147,12 +152,13 @@ produtosRouter.put('/:id', autenticar, async (req, res) => {
     categoriaId?: number;
     ordem?: number;
     estoque?: number;
+    disponivel?: boolean;
   };
 
   try {
     const produto = await prisma.produto.update({
       where: { id },
-      data: { nome, descricao, preco, foto, categoriaId, ordem, estoque },
+      data: { nome, descricao, preco, foto, categoriaId, ordem, estoque, disponivel },
       include: { categoria: true },
     });
     res.json(produto);

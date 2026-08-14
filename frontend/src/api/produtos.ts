@@ -11,6 +11,7 @@ export type DadosProduto = {
   categoriaId: number;
   ordem?: number;
   estoque?: number;
+  disponivel?: boolean;
 };
 
 // Cold start do free tier do Render pode levar até ~50s pra acordar o backend;
