@@ -3,13 +3,14 @@ import type { Produto } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// ordem não faz parte do payload — é sempre automática no backend
+// (posição final na criação, PATCH /produtos/reordenar pra reordenar).
 export type DadosProduto = {
   nome: string;
   descricao: string;
   preco: number;
   foto: string;
   categoriaId: number;
-  ordem?: number;
   estoque?: number;
   disponivel?: boolean;
 };
@@ -46,4 +47,13 @@ export function atualizarProduto(id: number, dados: Partial<DadosProduto>): Prom
 
 export function removerProduto(id: number): Promise<void> {
   return apiAutenticada<void>(`/produtos/${id}`, { method: 'DELETE' });
+}
+
+// Manda a nova ordem completa dos produtos de uma categoria; o backend reescreve
+// ordem de forma densa e atômica (ou tudo aplica, ou nada aplica).
+export function reordenarProdutos(categoriaId: number, ids: number[]): Promise<Produto[]> {
+  return apiAutenticada<Produto[]>('/produtos/reordenar', {
+    method: 'PATCH',
+    body: JSON.stringify({ categoriaId, ids }),
+  });
 }

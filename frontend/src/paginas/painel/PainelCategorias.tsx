@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FormularioCategoriaPainel } from '../../components/painel/FormularioCategoriaPainel';
-import { buscarCategorias, removerCategoria } from '../../api/categorias';
+import { buscarCategorias, reordenarCategorias, removerCategoria } from '../../api/categorias';
 import type { Categoria } from '../../types';
 
 export function PainelCategorias() {
@@ -9,6 +9,7 @@ export function PainelCategorias() {
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(null);
   const [formularioAberto, setFormularioAberto] = useState(false);
+  const [movendoId, setMovendoId] = useState<number | null>(null);
 
   const carregar = useCallback(() => {
     buscarCategorias()
@@ -42,6 +43,29 @@ export function PainelCategorias() {
     }
   }
 
+  // categorias já vem ordenada por "ordem" (GET /categorias), então a posição
+  // no array é a posição visual — mover é só trocar de lugar com o vizinho.
+  async function mover(categoria: Categoria, direcao: -1 | 1) {
+    if (!categorias) return;
+    const indiceAtual = categorias.findIndex((c) => c.id === categoria.id);
+    const indiceNovo = indiceAtual + direcao;
+    if (indiceNovo < 0 || indiceNovo >= categorias.length) return;
+
+    const reordenadas = [...categorias];
+    [reordenadas[indiceAtual], reordenadas[indiceNovo]] = [reordenadas[indiceNovo], reordenadas[indiceAtual]];
+
+    setErroAcao(null);
+    setMovendoId(categoria.id);
+    try {
+      await reordenarCategorias(reordenadas.map((c) => c.id));
+      carregar();
+    } catch (erro) {
+      setErroAcao(erro instanceof Error ? erro.message : 'Não foi possível reordenar as categorias.');
+    } finally {
+      setMovendoId(null);
+    }
+  }
+
   return (
     <div className="painel-secao">
       <div className="painel-secao__cabecalho">
@@ -60,15 +84,30 @@ export function PainelCategorias() {
           <thead>
             <tr>
               <th>Nome</th>
-              <th>Ordem</th>
+              <th aria-label="Reordenar"></th>
               <th aria-label="Ações"></th>
             </tr>
           </thead>
           <tbody>
-            {categorias.map((categoria) => (
+            {categorias.map((categoria, indice) => (
               <tr key={categoria.id}>
                 <td>{categoria.nome}</td>
-                <td>{categoria.ordem}</td>
+                <td className="tabela-painel__ordem">
+                  <button
+                    aria-label="Mover para cima"
+                    onClick={() => mover(categoria, -1)}
+                    disabled={indice === 0 || movendoId !== null}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    aria-label="Mover para baixo"
+                    onClick={() => mover(categoria, 1)}
+                    disabled={indice === categorias.length - 1 || movendoId !== null}
+                  >
+                    ↓
+                  </button>
+                </td>
                 <td className="tabela-painel__acoes">
                   <button onClick={() => abrirEdicao(categoria)}>Editar</button>
                   <button onClick={() => excluir(categoria)}>Excluir</button>

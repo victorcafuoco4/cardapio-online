@@ -24,6 +24,53 @@ produtosRouter.get('/', async (req, res) => {
   res.json(produtos);
 });
 
+// PATCH /produtos/reordenar — recebe a nova ordem completa dos produtos de UMA
+// categoria e reescreve ordem de forma densa (0..N-1), tudo numa transação:
+// ou a lista inteira aplica, ou nada aplica. Protegida.
+//
+// Precisa vir antes de qualquer rota "/:id" pra não colidir — mas como não há
+// nenhum PATCH "/:id" nesse router, a ordem de declaração não importa aqui;
+// o middleware do Express casa por método + caminho, não só por caminho.
+produtosRouter.patch('/reordenar', autenticar, async (req, res) => {
+  const { categoriaId, ids } = req.body ?? {};
+
+  if (!Number.isInteger(categoriaId)) {
+    res.status(400).json({ erro: 'categoriaId deve ser um número inteiro' });
+    return;
+  }
+  if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id: unknown) => Number.isInteger(id))) {
+    res.status(400).json({ erro: 'ids deve ser uma lista não vazia de números inteiros' });
+    return;
+  }
+  const idsUnicos = new Set<number>(ids);
+  if (idsUnicos.size !== ids.length) {
+    res.status(400).json({ erro: 'ids não pode conter valores duplicados' });
+    return;
+  }
+
+  const produtosAtuais = await prisma.produto.findMany({
+    where: { categoriaId },
+    select: { id: true },
+  });
+  const idsAtuais = new Set(produtosAtuais.map((produto) => produto.id));
+
+  const mesmoConjunto = idsAtuais.size === idsUnicos.size && [...idsAtuais].every((id) => idsUnicos.has(id));
+  if (!mesmoConjunto) {
+    res.status(400).json({
+      erro: 'ids deve conter exatamente todos os produtos da categoria informada, sem faltar, repetir ou incluir produtos de outra categoria',
+    });
+    return;
+  }
+
+  const produtos = await prisma.$transaction(
+    (ids as number[]).map((id, indice) =>
+      prisma.produto.update({ where: { id }, data: { ordem: indice }, include: { categoria: true } }),
+    ),
+  );
+
+  res.json(produtos.sort((a, b) => a.ordem - b.ordem));
+});
+
 // GET /produtos/:id
 produtosRouter.get('/:id', async (req, res) => {
   const id = Number(req.params.id);
@@ -51,13 +98,14 @@ type CorpoProduto = {
   preco?: unknown;
   foto?: unknown;
   categoriaId?: unknown;
-  ordem?: unknown;
   estoque?: unknown;
   disponivel?: unknown;
 };
 
 // Valida os campos do corpo da requisição.
 // Em modo parcial (PUT), campos ausentes são ignorados; os presentes ainda são validados.
+// "ordem" não é aceita aqui de propósito — é inteiramente gerenciada pelo backend
+// (posição automática na criação, PATCH /produtos/reordenar pra reordenar).
 function validarCamposProduto(corpo: CorpoProduto, { parcial }: { parcial: boolean }): string[] {
   const erros: string[] = [];
 
@@ -80,8 +128,7 @@ function validarCamposProduto(corpo: CorpoProduto, { parcial }: { parcial: boole
   validarCampo('foto', (v) => typeof v === 'string' && v.trim().length > 0, 'foto deve ser um texto não vazio');
   validarCampo('preco', (v) => typeof v === 'number' && v > 0, 'preco deve ser um número maior que zero');
   validarCampo('categoriaId', (v) => Number.isInteger(v), 'categoriaId deve ser um número inteiro');
-  // ordem e estoque têm valor default no schema, então nunca são obrigatórios — só validados se enviados.
-  validarCampo('ordem', (v) => Number.isInteger(v), 'ordem deve ser um número inteiro', { obrigatorio: false });
+  // estoque tem valor default no schema, então nunca é obrigatório — só validado se enviado.
   validarCampo(
     'estoque',
     (v) => Number.isInteger(v) && (v as number) >= 0,
@@ -97,6 +144,7 @@ function validarCamposProduto(corpo: CorpoProduto, { parcial }: { parcial: boole
 }
 
 // POST /produtos — protegida: só o lojista autenticado pode criar produtos.
+// ordem é sempre automática: o produto novo entra no final da categoria escolhida.
 produtosRouter.post('/', autenticar, async (req, res) => {
   const erros = validarCamposProduto(req.body ?? {}, { parcial: false });
   if (erros.length > 0) {
@@ -104,13 +152,19 @@ produtosRouter.post('/', autenticar, async (req, res) => {
     return;
   }
 
-  const { nome, descricao, preco, foto, categoriaId, ordem, estoque, disponivel } = req.body;
+  const { nome, descricao, preco, foto, categoriaId, estoque, disponivel } = req.body;
 
   const categoria = await prisma.categoria.findUnique({ where: { id: categoriaId } });
   if (!categoria) {
     res.status(400).json({ erro: 'categoria não encontrada' });
     return;
   }
+
+  // Estritamente depois do maior "ordem" já existente na categoria — funciona
+  // mesmo que a sequência atual não comece em 0 (dados antigos, criados antes
+  // desta regra). count() colidiria nesse caso; max+1 nunca colide.
+  const maximo = await prisma.produto.aggregate({ where: { categoriaId }, _max: { ordem: true } });
+  const ordem = (maximo._max.ordem ?? -1) + 1;
 
   const produto = await prisma.produto.create({
     data: { nome, descricao, preco, foto, categoriaId, ordem, estoque, disponivel },
@@ -122,6 +176,10 @@ produtosRouter.post('/', autenticar, async (req, res) => {
 
 // PUT /produtos/:id — atualização parcial: só os campos enviados no corpo são alterados.
 // Protegida: só o lojista autenticado pode editar produtos.
+//
+// Quando categoriaId muda: o produto vai pro final da categoria nova, e a
+// categoria antiga é recompactada (ordem densa 0..N-1) — tudo numa transação,
+// pra nunca deixar nenhuma das duas categorias com ordem inconsistente.
 produtosRouter.put('/:id', autenticar, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
@@ -144,34 +202,69 @@ produtosRouter.put('/:id', autenticar, async (req, res) => {
     }
   }
 
-  const { nome, descricao, preco, foto, categoriaId, ordem, estoque, disponivel } = corpo as {
+  const { nome, descricao, preco, foto, categoriaId, estoque, disponivel } = corpo as {
     nome?: string;
     descricao?: string;
     preco?: number;
     foto?: string;
     categoriaId?: number;
-    ordem?: number;
     estoque?: number;
     disponivel?: boolean;
   };
 
-  try {
-    const produto = await prisma.produto.update({
+  const produto = await prisma.$transaction(async (tx) => {
+    const produtoAtual = await tx.produto.findUnique({ where: { id } });
+    if (!produtoAtual) return null;
+
+    const categoriaMudou = categoriaId !== undefined && categoriaId !== produtoAtual.categoriaId;
+
+    const dadosUpdate: Prisma.ProdutoUncheckedUpdateInput = {
+      nome,
+      descricao,
+      preco,
+      foto,
+      categoriaId,
+      estoque,
+      disponivel,
+    };
+    if (categoriaMudou) {
+      const maximo = await tx.produto.aggregate({ where: { categoriaId }, _max: { ordem: true } });
+      dadosUpdate.ordem = (maximo._max.ordem ?? -1) + 1;
+    }
+
+    const atualizado = await tx.produto.update({
       where: { id },
-      data: { nome, descricao, preco, foto, categoriaId, ordem, estoque, disponivel },
+      data: dadosUpdate,
       include: { categoria: true },
     });
-    res.json(produto);
-  } catch (erro) {
-    if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === 'P2025') {
-      res.status(404).json({ erro: 'produto não encontrado' });
-      return;
+
+    if (categoriaMudou) {
+      const restantes = await tx.produto.findMany({
+        where: { categoriaId: produtoAtual.categoriaId },
+        orderBy: { ordem: 'asc' },
+      });
+      await Promise.all(
+        restantes.map((produtoRestante, indice) =>
+          produtoRestante.ordem === indice
+            ? Promise.resolve(produtoRestante)
+            : tx.produto.update({ where: { id: produtoRestante.id }, data: { ordem: indice } }),
+        ),
+      );
     }
-    throw erro;
+
+    return atualizado;
+  });
+
+  if (!produto) {
+    res.status(404).json({ erro: 'produto não encontrado' });
+    return;
   }
+
+  res.json(produto);
 });
 
 // DELETE /produtos/:id — protegida: só o lojista autenticado pode remover produtos.
+// Recompacta a ordem da categoria de origem depois de remover, na mesma transação.
 produtosRouter.delete('/:id', autenticar, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
@@ -180,7 +273,21 @@ produtosRouter.delete('/:id', autenticar, async (req, res) => {
   }
 
   try {
-    await prisma.produto.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      const produtoRemovido = await tx.produto.delete({ where: { id } });
+
+      const restantes = await tx.produto.findMany({
+        where: { categoriaId: produtoRemovido.categoriaId },
+        orderBy: { ordem: 'asc' },
+      });
+      await Promise.all(
+        restantes.map((produtoRestante, indice) =>
+          produtoRestante.ordem === indice
+            ? Promise.resolve(produtoRestante)
+            : tx.produto.update({ where: { id: produtoRestante.id }, data: { ordem: indice } }),
+        ),
+      );
+    });
     res.status(204).send();
   } catch (erro) {
     if (erro instanceof Prisma.PrismaClientKnownRequestError) {

@@ -13,7 +13,6 @@ type FormularioCategoriaPainelProps = {
 export function FormularioCategoriaPainel({ aberto, categoria, aoFechar, aoSalvar }: FormularioCategoriaPainelProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [nome, setNome] = useState('');
-  const [ordem, setOrdem] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -24,7 +23,6 @@ export function FormularioCategoriaPainel({ aberto, categoria, aoFechar, aoSalva
     if (aberto) {
       setErro(null);
       setNome(categoria?.nome ?? '');
-      setOrdem(categoria ? String(categoria.ordem) : '');
       dialog.showModal();
     } else {
       dialog.close();
@@ -42,7 +40,7 @@ export function FormularioCategoriaPainel({ aberto, categoria, aoFechar, aoSalva
     setEnviando(true);
     setErro(null);
 
-    const dados = { nome: nome.trim(), ordem: ordem.trim() ? Number(ordem) : undefined };
+    const dados = { nome: nome.trim() };
 
     try {
       if (categoria) {
@@ -69,17 +67,6 @@ export function FormularioCategoriaPainel({ aberto, categoria, aoFechar, aoSalva
         <div className="campo">
           <label htmlFor="categoria-nome">Nome</label>
           <input id="categoria-nome" type="text" value={nome} onChange={(e) => setNome(e.target.value)} />
-        </div>
-
-        <div className="campo">
-          <label htmlFor="categoria-ordem">Ordem (opcional)</label>
-          <input
-            id="categoria-ordem"
-            type="text"
-            inputMode="numeric"
-            value={ordem}
-            onChange={(e) => setOrdem(e.target.value)}
-          />
         </div>
 
         {erro && <p className="campo__erro campo__erro--envio">{erro}</p>}

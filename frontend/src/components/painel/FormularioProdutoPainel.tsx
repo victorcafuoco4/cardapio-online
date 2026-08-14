@@ -17,7 +17,6 @@ type Campos = {
   preco: string;
   foto: string;
   categoriaId: string;
-  ordem: string;
   estoque: string;
   disponivel: boolean;
 };
@@ -28,7 +27,6 @@ const CAMPOS_VAZIOS: Campos = {
   preco: '',
   foto: '',
   categoriaId: '',
-  ordem: '',
   estoque: '0',
   disponivel: true,
 };
@@ -59,7 +57,6 @@ export function FormularioProdutoPainel({
               preco: produto.preco,
               foto: produto.foto,
               categoriaId: String(produto.categoriaId),
-              ordem: String(produto.ordem),
               estoque: String(produto.estoque),
               disponivel: produto.disponivel,
             }
@@ -105,7 +102,6 @@ export function FormularioProdutoPainel({
       preco,
       foto: campos.foto.trim(),
       categoriaId,
-      ordem: campos.ordem.trim() ? Number(campos.ordem) : undefined,
       estoque,
       disponivel: campos.disponivel,
     };
@@ -188,17 +184,6 @@ export function FormularioProdutoPainel({
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="campo">
-          <label htmlFor="produto-ordem">Ordem (opcional)</label>
-          <input
-            id="produto-ordem"
-            type="text"
-            inputMode="numeric"
-            value={campos.ordem}
-            onChange={(e) => atualizarCampo('ordem', e.target.value)}
-          />
         </div>
 
         <div className="campo">
