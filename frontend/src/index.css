@@ -776,6 +776,12 @@ body {
   gap: 1.25rem;
 }
 
+.painel-dashboard__secao-titulo {
+  font-size: 0.95rem;
+  color: #333;
+  margin: 0 0 -0.5rem;
+}
+
 .stat-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

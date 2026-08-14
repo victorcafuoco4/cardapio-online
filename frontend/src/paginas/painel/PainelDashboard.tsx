@@ -31,6 +31,27 @@ export function PainelDashboard() {
 
   return (
     <div className="painel-dashboard">
+      <h3 className="painel-dashboard__secao-titulo">Hoje</h3>
+      <div className="stat-tiles">
+        <div className="stat-tile">
+          <p className="stat-tile__rotulo">Vendas hoje</p>
+          <p className="stat-tile__valor">{resumo.vendasHoje}</p>
+        </div>
+        <div className="stat-tile">
+          <p className="stat-tile__rotulo">Faturamento hoje</p>
+          <p className="stat-tile__valor">{formatarPreco(Number(resumo.faturamentoHoje))}</p>
+        </div>
+        <div className="stat-tile">
+          <p className="stat-tile__rotulo">Pedidos em aberto</p>
+          <p className="stat-tile__valor">{resumo.pedidosEmAberto}</p>
+        </div>
+        <div className="stat-tile">
+          <p className="stat-tile__rotulo">Ticket médio hoje</p>
+          <p className="stat-tile__valor">{formatarPreco(Number(resumo.ticketMedioHoje))}</p>
+        </div>
+      </div>
+
+      <h3 className="painel-dashboard__secao-titulo">Histórico</h3>
       <div className="stat-tiles">
         <div className="stat-tile">
           <p className="stat-tile__rotulo">Pedidos</p>

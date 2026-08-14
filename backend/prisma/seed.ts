@@ -288,6 +288,10 @@ async function main() {
       new Prisma.Decimal(0),
     );
 
+    // Demo "entregue" 1h depois de criado — só pra ter uma data plausível no
+    // gráfico de faturamento por dia, que agora é bucketizado por entregueEm.
+    const entregueEm = pedidoDemo.status === 'ENTREGUE' ? new Date(criadoEm.getTime() + 60 * 60 * 1000) : null;
+
     await prisma.pedido.create({
       data: {
         nomeCliente: pedidoDemo.nomeCliente,
@@ -296,9 +300,10 @@ async function main() {
         endereco: pedidoDemo.endereco,
         formaPagamento: pedidoDemo.formaPagamento,
         status: pedidoDemo.status,
+        entregueEm,
         total,
         criadoEm,
-        atualizadoEm: criadoEm,
+        atualizadoEm: entregueEm ?? criadoEm,
         itens: { create: itensComPreco },
       },
     });

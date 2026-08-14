@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { Prisma } from '../generated/prisma/client.js';
+import { chaveDiaFuso, limitesDoDia } from '../lib/data.js';
 import { prisma } from '../lib/prisma.js';
 import { autenticar } from '../middleware/autenticar.js';
 import { FORMAS_PAGAMENTO, STATUS_PEDIDO } from './pedidos.routes.js';
@@ -8,33 +9,30 @@ export const dashboardRouter = Router();
 
 const DIAS_HISTORICO = 14;
 
-// "YYYY-MM-DD" a partir do calendário LOCAL do servidor — nunca `toISOString()`,
-// que converte pra UTC e desloca o dia em fusos negativos (ex: um pedido feito
-// às 22h em São Paulo vira 01h UTC do dia seguinte). Usada tanto pra montar os
-// baldes de dia quanto pra encaixar cada pedido num deles, garantindo que os
-// dois lados concordem sobre o que é "o mesmo dia".
-function chaveDia(data: Date): string {
-  const ano = data.getFullYear();
-  const mes = String(data.getMonth() + 1).padStart(2, '0');
-  const dia = String(data.getDate()).padStart(2, '0');
-  return `${ano}-${mes}-${dia}`;
-}
-
 // GET /dashboard — resumo financeiro e operacional pro painel do lojista.
-// Totais (faturamento, ticket médio, produtos mais vendidos) são "de sempre";
-// o gráfico de faturamento por dia cobre só os últimos 14 dias, com zero
-// preenchido nos dias sem pedido, pra o gráfico não ter buracos.
+//
+// Regra financeira: só pedido ENTREGUE é faturamento realizado. RECEBIDO,
+// EM_PREPARO e PRONTO são vendas em andamento (aparecem em "Pedidos em
+// aberto", não em nenhuma métrica de faturamento). CANCELADO nunca conta.
+// "Hoje" é sempre o dia civil em America/Sao_Paulo (ver lib/data.ts), não o
+// fuso do processo Node — importante porque em produção o servidor pode não
+// estar rodando com esse fuso.
 dashboardRouter.get('/', autenticar, async (req, res) => {
-  const desde = new Date();
-  desde.setDate(desde.getDate() - (DIAS_HISTORICO - 1));
-  desde.setHours(0, 0, 0, 0);
+  const agora = new Date();
+  const { inicio: inicioHoje, fim: fimHoje } = limitesDoDia(agora);
+  const desde = new Date(inicioHoje.getTime() - (DIAS_HISTORICO - 1) * 24 * 60 * 60 * 1000);
 
-  const [contagemPorStatus, pedidos] = await Promise.all([
+  const [totalPedidos, contagemPorStatus, pedidosEntregues, vendasHoje] = await Promise.all([
+    prisma.pedido.count({ where: { status: { not: 'CANCELADO' } } }),
     prisma.pedido.groupBy({ by: ['status'], _count: true }),
-    // Pedidos cancelados não contam como faturamento, por isso ficam de fora daqui.
+    // Faturamento (total, por forma de pagamento, produtos mais vendidos, por dia)
+    // só considera pedidos ENTREGUE — é a única fonte de "faturamento realizado".
     prisma.pedido.findMany({
-      where: { status: { not: 'CANCELADO' } },
+      where: { status: 'ENTREGUE' },
       include: { itens: { include: { produto: true } } },
+    }),
+    prisma.pedido.count({
+      where: { criadoEm: { gte: inicioHoje, lt: fimHoje }, status: { not: 'CANCELADO' } },
     }),
   ]);
 
@@ -45,22 +43,36 @@ dashboardRouter.get('/', autenticar, async (req, res) => {
   for (const grupo of contagemPorStatus) {
     pedidosPorStatus[grupo.status] = grupo._count;
   }
+  const pedidosEmAberto = pedidosPorStatus.RECEBIDO + pedidosPorStatus.EM_PREPARO + pedidosPorStatus.PRONTO;
 
-  const totalPedidos = pedidos.length;
-  const faturamentoTotal = pedidos.reduce((acumulado, pedido) => acumulado.plus(pedido.total), new Prisma.Decimal(0));
-  const ticketMedio = totalPedidos > 0 ? faturamentoTotal.dividedBy(totalPedidos) : new Prisma.Decimal(0);
+  const faturamentoTotal = pedidosEntregues.reduce(
+    (acumulado, pedido) => acumulado.plus(pedido.total),
+    new Prisma.Decimal(0),
+  );
+  const ticketMedio =
+    pedidosEntregues.length > 0 ? faturamentoTotal.dividedBy(pedidosEntregues.length) : new Prisma.Decimal(0);
+
+  // entregueEm pode ser null nos pedidos ENTREGUE anteriores à existência do
+  // campo (dados legados, ainda sem backfill) — entram no faturamento total,
+  // mas ficam de fora de "hoje" e do gráfico por dia, que dependem da data.
+  const entreguesHoje = pedidosEntregues.filter(
+    (pedido) => pedido.entregueEm !== null && pedido.entregueEm >= inicioHoje && pedido.entregueEm < fimHoje,
+  );
+  const faturamentoHoje = entreguesHoje.reduce((acumulado, pedido) => acumulado.plus(pedido.total), new Prisma.Decimal(0));
+  const ticketMedioHoje =
+    entreguesHoje.length > 0 ? faturamentoHoje.dividedBy(entreguesHoje.length) : new Prisma.Decimal(0);
 
   const faturamentoPorFormaPagamento = Object.fromEntries(
     FORMAS_PAGAMENTO.map((forma) => [forma, new Prisma.Decimal(0)]),
   ) as Record<(typeof FORMAS_PAGAMENTO)[number], Prisma.Decimal>;
-  for (const pedido of pedidos) {
+  for (const pedido of pedidosEntregues) {
     faturamentoPorFormaPagamento[pedido.formaPagamento] = faturamentoPorFormaPagamento[pedido.formaPagamento].plus(
       pedido.total,
     );
   }
 
   const vendasPorProduto = new Map<number, { nome: string; quantidade: number; receita: Prisma.Decimal }>();
-  for (const pedido of pedidos) {
+  for (const pedido of pedidosEntregues) {
     for (const item of pedido.itens) {
       const receitaItem = item.precoUnitario.times(item.quantidade);
       const existente = vendasPorProduto.get(item.produtoId);
@@ -83,12 +95,12 @@ dashboardRouter.get('/', autenticar, async (req, res) => {
 
   const faturamentoPorDiaMapa = new Map<string, Prisma.Decimal>();
   for (let i = 0; i < DIAS_HISTORICO; i++) {
-    const dia = new Date(desde);
-    dia.setDate(dia.getDate() + i);
-    faturamentoPorDiaMapa.set(chaveDia(dia), new Prisma.Decimal(0));
+    const dia = new Date(desde.getTime() + i * 24 * 60 * 60 * 1000);
+    faturamentoPorDiaMapa.set(chaveDiaFuso(dia), new Prisma.Decimal(0));
   }
-  for (const pedido of pedidos) {
-    const chave = chaveDia(pedido.criadoEm);
+  for (const pedido of pedidosEntregues) {
+    if (!pedido.entregueEm) continue;
+    const chave = chaveDiaFuso(pedido.entregueEm);
     const valorAtual = faturamentoPorDiaMapa.get(chave);
     if (valorAtual) {
       faturamentoPorDiaMapa.set(chave, valorAtual.plus(pedido.total));
@@ -100,6 +112,10 @@ dashboardRouter.get('/', autenticar, async (req, res) => {
   }));
 
   res.json({
+    vendasHoje,
+    faturamentoHoje: faturamentoHoje.toFixed(2),
+    pedidosEmAberto,
+    ticketMedioHoje: ticketMedioHoje.toFixed(2),
     totalPedidos,
     faturamentoTotal: faturamentoTotal.toFixed(2),
     ticketMedio: ticketMedio.toFixed(2),

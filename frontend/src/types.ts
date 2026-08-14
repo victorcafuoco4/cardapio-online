@@ -84,6 +84,10 @@ export type FaturamentoDia = {
 };
 
 export type ResumoDashboard = {
+  vendasHoje: number;
+  faturamentoHoje: string;
+  pedidosEmAberto: number;
+  ticketMedioHoje: string;
   totalPedidos: number;
   faturamentoTotal: string;
   ticketMedio: string;

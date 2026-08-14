@@ -71,6 +71,10 @@ model Pedido {
   trocoPara      Decimal?       @db.Decimal(10, 2)
   observacoes    String?
   status         StatusPedido   @default(RECEBIDO)
+  // Preenchido quando o status vira ENTREGUE, limpo se sair de ENTREGUE depois.
+  // Fonte oficial da data de faturamento realizado — não usar atualizadoEm pra isso,
+  // que muda em qualquer alteração no pedido, não só na entrega.
+  entregueEm     DateTime?
   total          Decimal        @db.Decimal(10, 2)
   itens          ItemPedido[]
   criadoEm       DateTime       @default(now())

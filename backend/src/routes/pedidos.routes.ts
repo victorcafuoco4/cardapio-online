@@ -224,6 +224,17 @@ pedidosRouter.patch('/:id/status', autenticar, async (req, res) => {
   const estavaCancelado = pedidoAtual.status === 'CANCELADO';
   const vaiCancelar = novoStatus === 'CANCELADO';
 
+  // entregueEm é a fonte oficial da data de faturamento realizado (usada pelo
+  // dashboard): grava ao entrar em ENTREGUE, limpa ao sair — nunca fica com uma
+  // data "órfã" presa num pedido que não está mais entregue. Qualquer outra
+  // transição (que não envolva entrar/sair de ENTREGUE) não toca no campo.
+  let entregueEm = pedidoAtual.entregueEm;
+  if (novoStatus === 'ENTREGUE' && pedidoAtual.status !== 'ENTREGUE') {
+    entregueEm = new Date();
+  } else if (novoStatus !== 'ENTREGUE' && pedidoAtual.status === 'ENTREGUE') {
+    entregueEm = null;
+  }
+
   try {
     const pedido = await prisma.$transaction(async (tx) => {
       if (!estavaCancelado && vaiCancelar) {
@@ -250,7 +261,7 @@ pedidosRouter.patch('/:id/status', autenticar, async (req, res) => {
 
       return tx.pedido.update({
         where: { id },
-        data: { status: novoStatus },
+        data: { status: novoStatus, entregueEm },
         include: { itens: { include: { produto: true } } },
       });
     });
