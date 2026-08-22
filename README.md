@@ -12,7 +12,7 @@ Durante o desenvolvimento, usamos dados fictícios da **Doralina Vegana** para t
 
 - **Frontend:** React + Vite + TypeScript (`frontend/`) — fundamentos em HTML/CSS/JS puro ficam em `fundamentos/`, como registro do aprendizado
 - **Backend:** Node.js + Express + TypeScript
-- **Banco de dados:** PostgreSQL (via Docker em desenvolvimento) + Prisma ORM
+- **Banco de dados:** PostgreSQL 16 via Docker (desenvolvimento) / Supabase PostgreSQL (produção) + Prisma ORM
 - **Autenticação:** JWT + bcrypt
 
 ## Como rodar
@@ -23,7 +23,7 @@ Durante o desenvolvimento, usamos dados fictícios da **Doralina Vegana** para t
 docker compose up -d
 ```
 
-Sobe um Postgres em `localhost:5432` (usuário/senha/banco: `cardapio`), com os dados persistidos num volume Docker.
+Sobe um Postgres 16 em `localhost:5432` (usuário/senha/banco: `cardapio`), com os dados persistidos num volume Docker.
 
 ### Backend
 
@@ -51,14 +51,15 @@ Sobe em `http://localhost:5173`, consumindo a API do backend (`VITE_API_URL`).
 
 ## Deploy (Render)
 
-O `render.yaml` na raiz descreve os 3 recursos como *Blueprint* — banco Postgres, backend (Node) e frontend (site estático). Passo a passo:
+O banco de produção usado pelo backend é o **Supabase PostgreSQL**, via `DATABASE_URL` configurada manualmente (não faz parte do Blueprint). O `render.yaml` na raiz ainda declara 3 recursos como *Blueprint* — banco Postgres do Render, backend (Node) e frontend (site estático) —, mas o Postgres do Render (`cardapio-online-db`) permanece só temporariamente, como rollback da migração para o Supabase, e será removido do Blueprint após o período de validação. Passo a passo:
 
 1. Crie uma conta em [render.com](https://render.com) (ou faça login) e conecte sua conta do GitHub.
-2. No dashboard, **New → Blueprint**, selecione o repositório `cardapio-online`. O Render lê o `render.yaml` e mostra os 3 recursos que vai criar: `cardapio-online-db`, `cardapio-online-backend`, `cardapio-online-frontend`.
-3. Confira e clique em **Apply**. O Render cria o Postgres primeiro, depois builda o backend (rodando `prisma migrate deploy` automaticamente) e o frontend.
-4. Depois do primeiro deploy, popule o banco **uma única vez**: no serviço `cardapio-online-backend`, aba **Shell**, rode `npm run db:seed`.
+2. No dashboard, **New → Blueprint**, selecione o repositório `cardapio-online`. O Render lê o `render.yaml` e mostra os recursos que vai criar: `cardapio-online-db` (rollback, não usado em produção), `cardapio-online-backend`, `cardapio-online-frontend`.
+3. No serviço `cardapio-online-backend`, aba **Environment**, configure manualmente a variável secreta `DATABASE_URL` com a connection string do **Supabase Session Pooler** (porta 5432) — ela não vem do `render.yaml` (`sync: false`) justamente para não ficar versionada.
+4. Confira e clique em **Apply**. O Render builda o backend (rodando `npx prisma migrate deploy` automaticamente) e o frontend.
+5. Depois do primeiro deploy, popule o banco **uma única vez**: no serviço `cardapio-online-backend`, aba **Shell**, rode `npm run db:seed`.
    ⚠️ Não deixe o seed rodando a cada deploy — ele apaga pedidos e produtos existentes antes de recriar os dados de exemplo.
-5. Acesse a URL do frontend (algo como `https://cardapio-online-frontend.onrender.com`) e teste o fluxo completo.
+6. Acesse a URL do frontend (algo como `https://cardapio-online-frontend.onrender.com`) e teste o fluxo completo.
 
 **Vale saber:**
 - O plano gratuito "dorme" o backend depois de um tempo sem uso — a primeira requisição depois disso demora uns 30-60s pra acordar.
