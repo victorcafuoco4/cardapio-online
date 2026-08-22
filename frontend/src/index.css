@@ -567,7 +567,8 @@ body {
   background-color: white;
 }
 
-.painel-abas button {
+.painel-abas button,
+.painel-abas a {
   border: none;
   background: none;
   padding: 0.6rem 0.9rem;
@@ -575,9 +576,11 @@ body {
   color: #666;
   cursor: pointer;
   border-bottom: 2px solid transparent;
+  text-decoration: none;
 }
 
-.painel-abas button.ativa {
+.painel-abas button.ativa,
+.painel-abas a.ativa {
   color: #2f5233;
   font-weight: 600;
   border-bottom-color: #2f5233;
@@ -975,4 +978,149 @@ body {
   color: #0b0b0b;
   text-align: right;
   min-width: 64px;
+}
+
+/* ---------- Precificação de pratos (calculadora, nada é salvo) ---------- */
+
+.precificacao-aviso {
+  font-size: 0.8rem;
+  color: #888;
+  margin: -0.25rem 0 0.5rem;
+}
+
+.precificacao-grupo {
+  margin-top: 1.75rem;
+}
+
+.precificacao-grupo h3 {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+/* Mobile-first: campos empilhados por padrão, 2 colunas a partir de 600px —
+   mesmo critério já usado pra grade de produtos do cardápio. */
+.precificacao-campos {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 600px) {
+  .precificacao-campos {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 1rem;
+  }
+}
+
+.tabela-precificacao {
+  min-width: 860px;
+}
+
+.tabela-precificacao input,
+.tabela-precificacao select {
+  font: inherit;
+  width: 100%;
+  min-width: 5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 0.85rem;
+}
+
+.tabela-precificacao input:focus,
+.tabela-precificacao select:focus {
+  outline: 2px solid #2f5233;
+  outline-offset: 1px;
+}
+
+.precificacao__custo-calc {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.precificacao-remover {
+  border: 1px solid #ccc;
+  background: white;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.precificacao-lista-despesas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.precificacao-despesa {
+  display: grid;
+  grid-template-columns: 1fr 140px auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.precificacao-despesa input {
+  font: inherit;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+}
+
+.precificacao-despesa input:focus {
+  outline: 2px solid #2f5233;
+  outline-offset: 1px;
+}
+
+.precificacao-resumo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.precificacao-resumo__item {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.precificacao-resumo__item--destaque {
+  background-color: #2f5233;
+  color: white;
+}
+
+.precificacao-resumo__rotulo {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.precificacao-resumo__item--destaque .precificacao-resumo__rotulo {
+  color: #b6e2b0;
+}
+
+.precificacao-resumo__valor {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.precificacao-pendencias {
+  background-color: #fbe9e9;
+  color: #a33;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  font-size: 0.88rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.precificacao-pendencias ul {
+  padding-left: 1.1rem;
 }
