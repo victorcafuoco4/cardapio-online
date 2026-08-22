@@ -1,5 +1,6 @@
 import type { Produto } from '../types';
 import { formatarPreco } from '../utils/formatarPreco';
+import { ImagemProduto } from './ImagemProduto';
 
 type ProdutoCardProps = {
   produto: Produto;
@@ -14,15 +15,16 @@ export function ProdutoCard({ produto, aoVerDetalhes }: ProdutoCardProps) {
   const bloqueado = indisponivel || esgotado;
 
   return (
-    <article className={bloqueado ? 'produto produto--esgotado' : 'produto'}>
-      <img className="produto__foto" src={produto.foto} alt={produto.nome} />
+    <article className={bloqueado ? 'produto produto--bloqueado' : 'produto'}>
+      <div className="produto__foto-area">
+        <ImagemProduto className="produto__foto" src={produto.foto} alt={produto.nome} />
+        {bloqueado && <span className="produto__selo">{indisponivel ? 'Indisponível' : 'Esgotado'}</span>}
+      </div>
       <div className="produto__info">
         <h3 className="produto__nome">{produto.nome}</h3>
         <p className="produto__descricao">{produto.descricao}</p>
         <span className="produto__preco">{formatarPreco(Number(produto.preco))}</span>
-        {bloqueado ? (
-          <span className="produto__esgotado">{indisponivel ? 'Indisponível' : 'Esgotado'}</span>
-        ) : (
+        {!bloqueado && (
           <button className="produto__botao" onClick={() => aoVerDetalhes(produto)}>
             Ver detalhes
           </button>

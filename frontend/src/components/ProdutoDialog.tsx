@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Produto } from '../types';
 import { formatarPreco } from '../utils/formatarPreco';
 import { useCarrinho } from '../context/CarrinhoContext';
+import { ImagemProduto } from './ImagemProduto';
 
 type ProdutoDialogProps = {
   produto: Produto | null;
@@ -34,7 +35,7 @@ export function ProdutoDialog({ produto, aoFechar }: ProdutoDialogProps) {
           <button className="dialog__fechar" aria-label="Fechar" onClick={() => dialogRef.current?.close()}>
             ×
           </button>
-          <img className="dialog__foto" src={produto.foto} alt={produto.nome} />
+          <ImagemProduto className="dialog__foto" src={produto.foto} alt={produto.nome} />
           <h3>{produto.nome}</h3>
           <p>{produto.descricao}</p>
           <p className="dialog__preco">{formatarPreco(Number(produto.preco))}</p>

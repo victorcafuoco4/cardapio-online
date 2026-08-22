@@ -18,21 +18,209 @@ body {
 .cabecalho {
   background-color: #2f5233;
   color: white;
-  padding: 1.5rem 1rem;
+  padding: 1rem 1rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  gap: 0.4rem;
 }
 
 .cabecalho h1 {
-  font-size: 1.5rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* ---------- Logo do restaurante (ou fallback com iniciais) ----------
+   Círculo 1:1, sem imagem/URL externa — o fallback (iniciais) é o estado
+   padrão até o painel oferecer um jeito de configurar logoUrl de verdade. */
+.logo-restaurante {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #eef1ec;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  flex-shrink: 0;
+}
+
+.logo-restaurante--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #2f5233;
 }
 
 .status {
-  margin-top: 0.25rem;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .status--aberta {
   color: #b6e2b0;
+}
+
+.status--aberta::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background-color: #b6e2b0;
+  flex-shrink: 0;
+}
+
+/* ---------- Navegação flutuante (categorias + busca, uma linha só) ----------
+   .nav-flutuante é o ÚNICO elemento sticky — de propósito sem overflow (fica
+   "visible", que é o que permite o sticky funcionar). .barra-categorias (a
+   lista de categorias) é quem tem overflow-x:auto, num elemento IRMÃO do
+   busca-produtos, não ancestral do sticky — por isso os dois nunca entram em
+   conflito (ver explicação longa no BarraCategorias.tsx sobre por que
+   position:sticky e overflow no MESMO elemento quebra o sticky). Nenhum
+   ancestral (body/#root/main) define overflow — confirmado por inspeção. */
+.nav-flutuante {
+  position: sticky;
+  top: 10px;
+  z-index: 5;
+  max-width: 960px;
+  margin: 0 1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  background-color: white;
+  border: 1px solid #e5e2da;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.09);
+  padding: 0.4rem 0.5rem;
+}
+
+@media (min-width: 600px) {
+  .nav-flutuante {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Ocupa o espaço da esquerda, empurrando a busca (largura fixa) pra direita;
+   min-width:0 é o que permite um item flex ter overflow-x funcionando —
+   sem isso o flex item nunca fica menor que o conteúdo, e não rolaria. */
+.barra-categorias {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-categorias {
+    scroll-behavior: auto;
+  }
+}
+
+.barra-categorias::-webkit-scrollbar {
+  display: none;
+}
+
+.barra-categorias button {
+  flex-shrink: 0;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #444;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.barra-categorias button.ativa {
+  background-color: #2f5233;
+  border-color: #2f5233;
+  color: white;
+  font-weight: 600;
+}
+
+/* Largura fixa (nunca encolhe, nunca quebra linha) — compacta no celular,
+   entre 260–340px a partir de 600px. Fica fora do container que rola
+   horizontalmente, então nunca rola junto com as categorias. */
+.busca-produtos {
+  position: relative;
+  flex: 0 0 auto;
+  width: 132px;
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 600px) {
+  .busca-produtos {
+    width: 300px;
+  }
+}
+
+.busca-produtos__rotulo-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.busca-produtos__icone {
+  position: absolute;
+  left: 0.7rem;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: #999;
+  stroke-width: 1.8;
+  pointer-events: none;
+}
+
+.busca-produtos input {
+  width: 100%;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.55rem 2.1rem 0.55rem 2.15rem;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  background-color: #faf9f6;
+}
+
+.busca-produtos input:focus {
+  outline: 2px solid #2f5233;
+  outline-offset: 1px;
+}
+
+/* remove o "x" nativo do input[type=search] no Chrome/Edge — o botão de
+   limpar abaixo já cobre isso de forma consistente entre navegadores. */
+.busca-produtos input[type='search']::-webkit-search-cancel-button {
+  display: none;
+}
+
+.busca-produtos__limpar {
+  position: absolute;
+  right: 0.4rem;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background-color: #eee;
+  color: #555;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 /* ---------- Estados de carregamento/erro ---------- */
@@ -47,10 +235,77 @@ body {
   color: #a33;
 }
 
+/* Esqueleto de carregamento — pulso suave; @media (prefers-reduced-motion)
+   abaixo desativa a animação pra quem pediu menos movimento no sistema. */
+.skeleton-produtos {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.skeleton-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem;
+}
+
+.skeleton-card__foto {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background-color: #eee;
+}
+
+.skeleton-card__linha {
+  height: 12px;
+  border-radius: 4px;
+  background-color: #eee;
+  flex: 1;
+}
+
+.skeleton-card__linha--curta {
+  max-width: 55%;
+}
+
+.skeleton-card__foto,
+.skeleton-card__linha {
+  animation: skeleton-pulso 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulso {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-card__foto,
+  .skeleton-card__linha {
+    animation: none;
+  }
+}
+
 /* ---------- Categorias ---------- */
 
 .categoria {
   padding: 1rem;
+  /* Compensa a barra de categorias fixa: sem isso, rolar até a seção (clique
+     na barra, ou âncora) deixaria o título escondido atrás dela. */
+  /* Estimativa: 10px (top da barra flutuante) + ~48px de altura da própria
+     barra + folga. Reflete a barra flutuante compacta, mais baixa que a
+     faixa cheia de antes. */
+  scroll-margin-top: 4.5rem;
 }
 
 .categoria h2 {
@@ -79,11 +334,31 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.produto__foto {
+/* O wrapper carrega o tamanho e a posição (pro selo de indisponível/esgotado);
+   .produto__foto (img OU placeholder de .imagem-produto) só preenche 100%. */
+.produto__foto-area {
+  position: relative;
   width: 96px;
   height: 96px;
-  object-fit: cover;
   flex-shrink: 0;
+}
+
+.produto__foto {
+  width: 100%;
+  height: 100%;
+}
+
+.produto__selo {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  background-color: rgba(163, 51, 51, 0.94);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
 }
 
 .produto__info {
@@ -124,15 +399,34 @@ body {
   color: white;
 }
 
-.produto--esgotado {
+.produto--bloqueado {
   opacity: 0.6;
 }
 
-.produto__esgotado {
-  align-self: flex-start;
-  color: #a33;
-  font-weight: 600;
-  font-size: 0.8rem;
+/* ---------- Imagem de produto (foto real ou placeholder interno) ---------- */
+
+.imagem-produto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagem-produto--vazia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #eef1ec;
+}
+
+.imagem-produto--vazia svg {
+  width: 38%;
+  height: 38%;
+  fill: none;
+  stroke: #a3ad9f;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ---------- Rodapé ---------- */
@@ -149,6 +443,15 @@ body {
    e usamos @media para ADICIONAR ajustes só quando a tela é maior. */
 
 @media (min-width: 600px) {
+  .logo-restaurante {
+    width: 92px;
+    height: 92px;
+  }
+
+  .logo-restaurante--fallback {
+    font-size: 1.5rem;
+  }
+
   .lista-produtos {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -158,7 +461,22 @@ body {
     flex-direction: column;
   }
 
-  .produto__foto {
+  .produto__foto-area {
+    width: 100%;
+    height: 140px;
+  }
+
+  .skeleton-produtos {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .skeleton-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .skeleton-card__foto {
     width: 100%;
     height: 140px;
   }
@@ -166,6 +484,10 @@ body {
 
 @media (min-width: 900px) {
   .lista-produtos {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .skeleton-produtos {
     grid-template-columns: repeat(3, 1fr);
   }
 }
