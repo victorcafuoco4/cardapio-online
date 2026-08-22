@@ -47,8 +47,11 @@ export type ItemPedidoResposta = {
 };
 
 // Formato devolvido pela API (POST/GET /pedidos) — enums em maiúsculo, como no banco.
+// Só aparece pra quem já tem os dados (quem acabou de criar o pedido, ou o painel
+// autenticado do lojista) — nunca é o formato da rota pública de acompanhamento.
 export type PedidoResposta = {
   id: number;
+  tokenAcompanhamento: string;
   nomeCliente: string;
   telefone: string;
   tipoEntrega: 'RETIRADA' | 'ENTREGA';
@@ -60,6 +63,26 @@ export type PedidoResposta = {
   total: string;
   criadoEm: string;
   itens: ItemPedidoResposta[];
+};
+
+// Item de pedido no formato mínimo devolvido pela rota pública de acompanhamento —
+// sem id interno, só o necessário pra exibir a lista de itens.
+export type ItemPedidoPublico = {
+  quantidade: number;
+  precoUnitario: string;
+  produto: { nome: string };
+};
+
+// Formato devolvido por GET /pedidos/acompanhar/:token — deliberadamente mínimo,
+// sem id interno nem nenhum dado pessoal do cliente (nome, telefone, endereço,
+// observações). Ver backend/src/routes/pedidos.routes.ts.
+export type PedidoPublico = {
+  status: StatusPedido;
+  tipoEntrega: 'RETIRADA' | 'ENTREGA';
+  total: string;
+  criadoEm: string;
+  entregueEm: string | null;
+  itens: ItemPedidoPublico[];
 };
 
 export type Usuario = {

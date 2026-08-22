@@ -32,9 +32,60 @@ pedidosRouter.get('/', autenticar, async (req, res) => {
   res.json(pedidos);
 });
 
-// GET /pedidos/:id — pública de propósito: é o link de acompanhamento que o
-// cliente usa pra ver o status do próprio pedido (Etapa 12), sem precisar de login.
-pedidosRouter.get('/:id', async (req, res) => {
+// Formato de um UUID (qualquer versão) — valida antes de consultar o banco pra
+// nunca deixar uma string malformada chegar ao driver como valor de uma coluna
+// @db.Uuid, o que geraria um erro de sintaxe do Postgres em vez de "não encontrado".
+const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// GET /pedidos/acompanhar/:token — pública de propósito: é o link de acompanhamento
+// que o cliente usa pra ver o status do próprio pedido, sem precisar de login.
+// Path literal ("acompanhar") em vez de reaproveitar a forma /:id — isso evita
+// qualquer ambiguidade de rota com o /:id abaixo, que agora é autenticado.
+//
+// Nunca logar o token (nem em erro nem em log de acesso): ele é a única credencial
+// desse link, e nenhuma linha deste handler o imprime.
+pedidosRouter.get('/acompanhar/:token', async (req, res) => {
+  const { token } = req.params;
+  if (!REGEX_UUID.test(token)) {
+    res.status(404).json({ erro: 'pedido não encontrado' });
+    return;
+  }
+
+  // select explícito: só o que a tela de acompanhamento realmente usa. Diferente
+  // de um include, um campo novo adicionado ao Pedido no futuro não vaza aqui
+  // por padrão — precisa ser adicionado a esta lista de propósito.
+  const pedido = await prisma.pedido.findUnique({
+    where: { tokenAcompanhamento: token },
+    select: {
+      status: true,
+      tipoEntrega: true,
+      total: true,
+      criadoEm: true,
+      entregueEm: true,
+      itens: {
+        select: {
+          quantidade: true,
+          precoUnitario: true,
+          produto: { select: { nome: true } },
+        },
+      },
+    },
+  });
+
+  if (!pedido) {
+    res.status(404).json({ erro: 'pedido não encontrado' });
+    return;
+  }
+
+  res.json(pedido);
+});
+
+// GET /pedidos/:id — protegida: nada no frontend consulta um pedido individual
+// pelo id numérico hoje (o painel usa a listagem completa em GET /pedidos), mas
+// mantemos a rota disponível pro lojista autenticado, no mesmo padrão de
+// PATCH /:id/status. Não é mais pública — isso fechava um IDOR (id sequencial
+// permitia enumerar pedidos e ler dados pessoais de qualquer cliente).
+pedidosRouter.get('/:id', autenticar, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
     res.status(400).json({ erro: 'id inválido' });

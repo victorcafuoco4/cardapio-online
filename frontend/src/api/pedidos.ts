@@ -1,5 +1,5 @@
 import { apiAutenticada, apiPublica } from './http';
-import type { DadosPedido, ItemCarrinho, PedidoResposta, StatusPedido } from '../types';
+import type { DadosPedido, ItemCarrinho, PedidoPublico, PedidoResposta, StatusPedido } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -42,10 +42,11 @@ export async function criarPedido(dados: DadosPedido, itensCarrinho: ItemCarrinh
   return resposta.json();
 }
 
-// Busca um pedido pelo id — pública de propósito: é a página de acompanhamento
-// que o cliente acessa sem estar logado.
-export function buscarPedido(id: number): Promise<PedidoResposta> {
-  return apiPublica<PedidoResposta>(`/pedidos/${id}`);
+// Busca um pedido pelo token de acompanhamento — nunca pelo id numérico interno.
+// Pública de propósito: é a página de acompanhamento que o cliente acessa sem
+// estar logado. A resposta vem deliberadamente sem dados pessoais (ver types.ts).
+export function buscarPedido(token: string): Promise<PedidoPublico> {
+  return apiPublica<PedidoPublico>(`/pedidos/acompanhar/${token}`);
 }
 
 // Lista todos os pedidos — usada pelo painel do lojista (protegida no backend).

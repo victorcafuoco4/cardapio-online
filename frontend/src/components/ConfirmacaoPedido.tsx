@@ -77,7 +77,7 @@ export function ConfirmacaoPedido({ pedido, aoNovoPedido }: ConfirmacaoPedidoPro
         )}
       </dl>
 
-      <Link to={`/pedido/${pedido.id}`} className="botao-secundario acompanhamento__voltar">
+      <Link to={`/pedido/${pedido.tokenAcompanhamento}`} className="botao-secundario acompanhamento__voltar">
         Acompanhar pedido
       </Link>
       <button className="dialog__adicionar" onClick={aoNovoPedido}>

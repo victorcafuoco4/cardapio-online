@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { buscarPedido } from '../api/pedidos';
 import { formatarPreco } from '../utils/formatarPreco';
-import type { PedidoResposta, StatusPedido } from '../types';
+import type { PedidoPublico, StatusPedido } from '../types';
 
 const ETAPAS: StatusPedido[] = ['RECEBIDO', 'EM_PREPARO', 'PRONTO', 'ENTREGUE'];
 
@@ -21,20 +21,20 @@ const ROTULO_ENTREGA = { RETIRADA: 'Retirada no local', ENTREGA: 'Entrega' };
 const INTERVALO_ATUALIZACAO_MS = 15000;
 
 export function PaginaAcompanhamento() {
-  const { id } = useParams();
-  const [pedido, setPedido] = useState<PedidoResposta | null>(null);
+  const { token } = useParams();
+  const [pedido, setPedido] = useState<PedidoPublico | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
   const carregar = useCallback(() => {
-    if (!id || !Number.isInteger(Number(id))) {
-      setErro('Número de pedido inválido.');
+    if (!token) {
+      setErro('Link de acompanhamento inválido.');
       return;
     }
 
-    buscarPedido(Number(id))
+    buscarPedido(token)
       .then(setPedido)
       .catch((erro) => setErro(erro instanceof Error ? erro.message : 'Pedido não encontrado.'));
-  }, [id]);
+  }, [token]);
 
   useEffect(() => {
     carregar();
@@ -73,7 +73,9 @@ export function PaginaAcompanhamento() {
   return (
     <div className="pagina-acompanhamento">
       <div className="cartao-acompanhamento">
-        <h1>Pedido #{pedido.id}</h1>
+        {/* Código curto derivado do próprio token da URL — nunca o id sequencial
+            interno, que a resposta pública nem traz. */}
+        <h1>Pedido #{token?.slice(0, 8).toUpperCase()}</h1>
         <p className="pagina-login__subtitulo">{ROTULO_ENTREGA[pedido.tipoEntrega]}</p>
 
         {pedido.status === 'CANCELADO' ? (
@@ -94,8 +96,8 @@ export function PaginaAcompanhamento() {
         )}
 
         <ul className="lista-carrinho">
-          {pedido.itens.map((item) => (
-            <li key={item.id} className="item-carrinho">
+          {pedido.itens.map((item, indice) => (
+            <li key={`${item.produto.nome}-${indice}`} className="item-carrinho">
               <span className="item-carrinho__nome">
                 {item.quantidade}x {item.produto.nome}
               </span>

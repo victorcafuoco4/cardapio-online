@@ -65,6 +65,10 @@ enum StatusPedido {
 
 model Pedido {
   id             Int            @id @default(autoincrement())
+  // Identificador público usado no link de acompanhamento do cliente — nunca o
+  // id sequencial, que é previsível e permitiria enumerar pedidos de terceiros.
+  // Gerado pelo próprio Postgres (gen_random_uuid(), nativo desde o PG13).
+  tokenAcompanhamento String      @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nomeCliente    String
   telefone       String
   tipoEntrega    TipoEntrega
