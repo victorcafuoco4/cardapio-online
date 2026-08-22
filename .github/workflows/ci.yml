@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend — Prisma, testes e build
+    runs-on: ubuntu-latest
+
+    # Postgres 16 efêmero, só deste job — credenciais fixas e descartáveis,
+    # nunca o Supabase/Render de produção.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      # backend/scripts/prepararBancoTeste.ts e backend/vitest.setup.ts leem
+      # DATABASE_URL de backend/.env (não de secret nenhum) pra descobrir
+      # host/porta/credenciais do Postgres local e montar o banco isolado
+      # "cardapio_test" — precisa existir já antes do npm ci porque o
+      # postinstall (prisma generate) também lê essa variável. O nome do
+      # banco aqui nunca é usado pra conectar de verdade: os scripts sempre
+      # trocam por "postgres" (manutenção) ou "cardapio_test" (teste).
+      - name: Criar .env local da CI (credenciais descartáveis)
+        run: |
+          cat > .env <<'EOF'
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5432/cardapio_ci"
+          JWT_SECRET="ci-jwt-secret-descartavel"
+          EOF
+
+      - name: Instalar dependências (npm ci)
+        run: npm ci
+
+      - name: Validar o schema do Prisma
+        run: npx prisma validate
+
+      - name: Testes (cria/migra o banco isolado cardapio_test e roda os 6 testes)
+        run: npm test
+
+      - name: Build do backend
+        run: npm run build
+
+  frontend:
+    name: Frontend — build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências (npm ci)
+        run: npm ci
+
+      - name: Build do frontend
+        run: npm run build
