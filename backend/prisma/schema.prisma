@@ -17,30 +17,36 @@ datasource db {
 }
 
 model Categoria {
-  id       Int    @id @default(autoincrement())
+  id       Int       @id @default(autoincrement())
   nome     String
-  ordem    Int    @default(0)
+  ordem    Int       @default(0)
   produtos Produto[]
 
   @@map("categorias")
 }
 
 model Produto {
-  id          Int      @id @default(autoincrement())
-  nome        String
-  descricao   String
-  preco       Decimal  @db.Decimal(10, 2)
-  foto        String
-  ordem       Int      @default(0)
-  estoque     Int      @default(0)
+  id           Int          @id @default(autoincrement())
+  nome         String
+  descricao    String
+  preco        Decimal      @db.Decimal(10, 2)
+  foto         String
+  ordem        Int          @default(0)
+  estoque      Int          @default(0)
   // Distinto de estoque: desativação manual do lojista, independente de saldo físico.
-  disponivel  Boolean  @default(true)
-  categoriaId Int
-  categoria   Categoria @relation(fields: [categoriaId], references: [id])
-  itensPedido ItemPedido[]
-  criadoEm    DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
+  disponivel   Boolean      @default(true)
+  categoriaId  Int
+  categoria    Categoria    @relation(fields: [categoriaId], references: [id])
+  itensPedido  ItemPedido[]
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
 
+  // Composto, não dois índices separados: as duas colunas aparecem juntas no
+  // ORDER BY do cardápio público (GET /produtos), o prefixo categoriaId atende
+  // sozinho os filtros de igualdade (reordenação, e a checagem de FK ao excluir
+  // uma categoria), e o sufixo ordem faz o MAX(ordem) de POST/PUT /produtos
+  // virar index-only scan.
+  @@index([categoriaId, ordem])
   @@map("produtos")
 }
 
@@ -64,28 +70,33 @@ enum StatusPedido {
 }
 
 model Pedido {
-  id             Int            @id @default(autoincrement())
+  id                  Int            @id @default(autoincrement())
   // Identificador público usado no link de acompanhamento do cliente — nunca o
   // id sequencial, que é previsível e permitiria enumerar pedidos de terceiros.
   // Gerado pelo próprio Postgres (gen_random_uuid(), nativo desde o PG13).
-  tokenAcompanhamento String      @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nomeCliente    String
-  telefone       String
-  tipoEntrega    TipoEntrega
-  endereco       String?
-  formaPagamento FormaPagamento
-  trocoPara      Decimal?       @db.Decimal(10, 2)
-  observacoes    String?
-  status         StatusPedido   @default(RECEBIDO)
+  tokenAcompanhamento String         @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nomeCliente         String
+  telefone            String
+  tipoEntrega         TipoEntrega
+  endereco            String?
+  formaPagamento      FormaPagamento
+  trocoPara           Decimal?       @db.Decimal(10, 2)
+  observacoes         String?
+  status              StatusPedido   @default(RECEBIDO)
   // Preenchido quando o status vira ENTREGUE, limpo se sair de ENTREGUE depois.
   // Fonte oficial da data de faturamento realizado — não usar atualizadoEm pra isso,
   // que muda em qualquer alteração no pedido, não só na entrega.
-  entregueEm     DateTime?
-  total          Decimal        @db.Decimal(10, 2)
-  itens          ItemPedido[]
-  criadoEm       DateTime       @default(now())
-  atualizadoEm   DateTime       @updatedAt
+  entregueEm          DateTime?
+  total               Decimal        @db.Decimal(10, 2)
+  itens               ItemPedido[]
+  criadoEm            DateTime       @default(now())
+  atualizadoEm        DateTime       @updatedAt
 
+  // GET /pedidos ordena por criadoEm desc sobre a tabela inteira, e o painel
+  // repete essa consulta a cada 15s. Serve também o filtro de faixa de data
+  // ("vendas de hoje") do dashboard. Um btree atende as duas direções — o
+  // Postgres varre índice para trás sem custo extra —, por isso sem sort: Desc.
+  @@index([criadoEm])
   @@map("pedidos")
 }
 
@@ -109,5 +120,17 @@ model ItemPedido {
   // Preço do produto no momento do pedido — não muda se o preço do produto mudar depois.
   precoUnitario Decimal @db.Decimal(10, 2)
 
+  // Dois índices individuais, não um composto: pedidoId e produtoId nunca
+  // aparecem na mesma condição, e o Postgres só aproveita prefixos à esquerda —
+  // um (pedidoId, produtoId) deixaria produtoId descoberto.
+  //
+  // pedidoId é filtrado em toda leitura de pedido (o Prisma resolve os include
+  // por queries separadas, com WHERE pedidoId IN (...)), inclusive dentro da
+  // transação de PATCH /:id/status, enquanto a linha está travada por FOR UPDATE.
+  @@index([pedidoId])
+  // produtoId não é filtro de nenhuma leitura — o include aninhado do produto
+  // resolve por produtos.id, que já é PK. Existe pela checagem de FOREIGN KEY
+  // ... ON DELETE RESTRICT, que varre esta tabela a cada exclusão de produto.
+  @@index([produtoId])
   @@map("itens_pedido")
 }
