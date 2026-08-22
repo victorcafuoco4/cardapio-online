@@ -133,3 +133,155 @@ describe('IDOR — acompanhamento de pedidos', () => {
     expect(detalhe.body.nomeCliente).toBe('Cliente Teste');
   });
 });
+
+// Regressão: a transição de status lia o pedido FORA da transação, então dois
+// cancelamentos simultâneos decidiam pela mesma leitura obsoleta e devolviam o
+// estoque duas vezes. O conserto trava a linha do pedido (SELECT ... FOR UPDATE)
+// antes de ler, dentro da transação.
+describe('Concorrência — cancelamento devolve estoque uma única vez', () => {
+  const ESTOQUE_INICIAL = 100;
+  const QUANTIDADE = 3;
+  // Saldo logo após o pedido nascer: o POST /pedidos já reservou a quantidade.
+  const ESTOQUE_RESERVADO = ESTOQUE_INICIAL - QUANTIDADE;
+
+  let categoriaId: number;
+  let contador = 0;
+
+  beforeAll(async () => {
+    const categoria = await prisma.categoria.create({
+      data: { nome: 'Categoria cancelamento', ordem: 0 },
+    });
+    categoriaId = categoria.id;
+  });
+
+  afterAll(async () => {
+    await prisma.itemPedido.deleteMany({});
+    await prisma.pedido.deleteMany({});
+    await prisma.produto.deleteMany({});
+    await prisma.categoria.deleteMany({});
+    await prisma.$disconnect();
+  });
+
+  // Produto novo a cada caso: cada teste mede o saldo de um estoque só dele,
+  // sem depender da ordem de execução nem do que os outros casos fizeram.
+  async function criarProdutoEPedido(): Promise<{ produtoId: number; pedidoId: number }> {
+    contador += 1;
+    const produto = await prisma.produto.create({
+      data: {
+        nome: `Produto cancelamento ${contador}`,
+        descricao: 'Descrição de teste',
+        preco: 10,
+        foto: 'https://exemplo.com/foto.jpg',
+        estoque: ESTOQUE_INICIAL,
+        disponivel: true,
+        categoriaId,
+      },
+    });
+
+    const criado = await request(app)
+      .post('/pedidos')
+      .send({
+        nomeCliente: 'Cliente Teste',
+        telefone: '11999990000',
+        tipoEntrega: 'RETIRADA',
+        formaPagamento: 'DINHEIRO',
+        itens: [{ produtoId: produto.id, quantidade: QUANTIDADE }],
+      });
+    expect(criado.status).toBe(201);
+
+    return { produtoId: produto.id, pedidoId: criado.body.id };
+  }
+
+  function mudarStatus(pedidoId: number, status: string) {
+    return request(app)
+      .patch(`/pedidos/${pedidoId}/status`)
+      .set('Authorization', `Bearer ${tokenAdmin()}`)
+      .send({ status });
+  }
+
+  async function estoqueDe(produtoId: number): Promise<number> {
+    const produto = await prisma.produto.findUnique({ where: { id: produtoId } });
+    if (!produto) throw new Error(`produto ${produtoId} não encontrado`);
+    return produto.estoque;
+  }
+
+  it('cancelar um pedido ativo devolve o estoque reservado', async () => {
+    const { produtoId, pedidoId } = await criarProdutoEPedido();
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_RESERVADO);
+
+    const resposta = await mudarStatus(pedidoId, 'CANCELADO');
+
+    expect(resposta.status).toBe(200);
+    expect(resposta.body.status).toBe('CANCELADO');
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_INICIAL);
+  });
+
+  it('cancelar de novo o mesmo pedido não devolve estoque outra vez', async () => {
+    const { produtoId, pedidoId } = await criarProdutoEPedido();
+
+    const primeira = await mudarStatus(pedidoId, 'CANCELADO');
+    expect(primeira.status).toBe(200);
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_INICIAL);
+
+    // Contrato preservado: repetir o cancelamento continua sendo 200, não erro.
+    const segunda = await mudarStatus(pedidoId, 'CANCELADO');
+    expect(segunda.status).toBe(200);
+    expect(segunda.body.status).toBe('CANCELADO');
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_INICIAL);
+  });
+
+  it('dois cancelamentos concorrentes devolvem o estoque uma única vez', async () => {
+    const { produtoId, pedidoId } = await criarProdutoEPedido();
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_RESERVADO);
+
+    // Sem sleep nem ordenação artificial: as duas requisições partem juntas e a
+    // asserção é sobre o invariante (o saldo final), que o lock de linha torna
+    // determinístico qualquer que seja a ordem em que elas alcancem o banco.
+    const [primeira, segunda] = await Promise.all([
+      mudarStatus(pedidoId, 'CANCELADO'),
+      mudarStatus(pedidoId, 'CANCELADO'),
+    ]);
+
+    expect(primeira.status).toBe(200);
+    expect(segunda.status).toBe(200);
+    // Antes do conserto, o saldo aqui virava ESTOQUE_INICIAL + QUANTIDADE.
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_INICIAL);
+
+    const pedido = await prisma.pedido.findUnique({ where: { id: pedidoId } });
+    expect(pedido?.status).toBe('CANCELADO');
+  });
+
+  it('reativar um pedido cancelado reserva o estoque de novo', async () => {
+    const { produtoId, pedidoId } = await criarProdutoEPedido();
+
+    await mudarStatus(pedidoId, 'CANCELADO');
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_INICIAL);
+
+    const reativado = await mudarStatus(pedidoId, 'RECEBIDO');
+
+    expect(reativado.status).toBe(200);
+    expect(reativado.body.status).toBe('RECEBIDO');
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_RESERVADO);
+  });
+
+  it('transição entre status ativos não mexe no estoque e controla entregueEm', async () => {
+    const { produtoId, pedidoId } = await criarProdutoEPedido();
+
+    const emPreparo = await mudarStatus(pedidoId, 'EM_PREPARO');
+    expect(emPreparo.status).toBe(200);
+    expect(emPreparo.body.entregueEm).toBeNull();
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_RESERVADO);
+
+    // Entrar em ENTREGUE grava a data de faturamento realizado.
+    const entregue = await mudarStatus(pedidoId, 'ENTREGUE');
+    expect(entregue.status).toBe(200);
+    expect(entregue.body.entregueEm).not.toBeNull();
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_RESERVADO);
+
+    // Sair de ENTREGUE limpa a data, pra não sobrar data órfã no dashboard.
+    const voltou = await mudarStatus(pedidoId, 'PRONTO');
+    expect(voltou.status).toBe(200);
+    expect(voltou.body.entregueEm).toBeNull();
+    expect(await estoqueDe(produtoId)).toBe(ESTOQUE_RESERVADO);
+  });
+});

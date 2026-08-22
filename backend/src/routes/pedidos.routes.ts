@@ -10,10 +10,21 @@ export const FORMAS_PAGAMENTO = ['DINHEIRO', 'CARTAO', 'PIX'] as const;
 export const STATUS_PEDIDO = ['RECEBIDO', 'EM_PREPARO', 'PRONTO', 'ENTREGUE', 'CANCELADO'] as const;
 
 class EstoqueInsuficienteError extends Error {
-  constructor(public produtoId: number) {
-    super(`estoque insuficiente para o produto ${produtoId}`);
+  constructor(
+    public produtoId: number,
+    // Nome do produto no momento do erro. PATCH /:id/status precisa dele pra montar
+    // a mensagem: depois que a leitura do pedido passou pra dentro da transação, não
+    // sobra referência aos itens no bloco catch. Omitido (como em POST /pedidos), a
+    // mensagem cai no id, exatamente como antes.
+    public nomeProduto?: string,
+  ) {
+    super(`estoque insuficiente para o produto ${nomeProduto ?? produtoId}`);
   }
 }
+
+// Pedido sumiu entre a validação e a transação, ou nunca existiu. Como a leitura
+// agora acontece dentro da transação, o 404 precisa viajar como exceção até o catch.
+class PedidoNaoEncontradoError extends Error {}
 
 class ProdutoIndisponivelError extends Error {
   constructor(public produtoId: number) {
@@ -285,31 +296,53 @@ pedidosRouter.patch('/:id/status', autenticar, async (req, res) => {
   }
   const novoStatus = status as (typeof STATUS_PEDIDO)[number];
 
-  const pedidoAtual = await prisma.pedido.findUnique({
-    where: { id },
-    include: { itens: { include: { produto: true } } },
-  });
-  if (!pedidoAtual) {
-    res.status(404).json({ erro: 'pedido não encontrado' });
-    return;
-  }
-
-  const estavaCancelado = pedidoAtual.status === 'CANCELADO';
-  const vaiCancelar = novoStatus === 'CANCELADO';
-
-  // entregueEm é a fonte oficial da data de faturamento realizado (usada pelo
-  // dashboard): grava ao entrar em ENTREGUE, limpa ao sair — nunca fica com uma
-  // data "órfã" presa num pedido que não está mais entregue. Qualquer outra
-  // transição (que não envolva entrar/sair de ENTREGUE) não toca no campo.
-  let entregueEm = pedidoAtual.entregueEm;
-  if (novoStatus === 'ENTREGUE' && pedidoAtual.status !== 'ENTREGUE') {
-    entregueEm = new Date();
-  } else if (novoStatus !== 'ENTREGUE' && pedidoAtual.status === 'ENTREGUE') {
-    entregueEm = null;
-  }
-
   try {
     const pedido = await prisma.$transaction(async (tx) => {
+      // Trava a linha do pedido ANTES de qualquer leitura que decida movimentação
+      // de estoque. É essa trava que torna a transição atômica de ponta a ponta:
+      // uma segunda requisição concorrente fica bloqueada aqui até a primeira
+      // commitar e, só então, lê o status já atualizado — a decisão de devolver
+      // saldo nunca é tomada duas vezes sobre a mesma transição.
+      //
+      // Antes, esta leitura acontecia fora da transação: dois cancelamentos
+      // simultâneos (duplo clique no select, ou duas abas do painel — que
+      // recarrega sozinho a cada 15s) liam ambos "RECEBIDO", ambos concluíam
+      // "não estava cancelado, vai cancelar" e ambos incrementavam o estoque,
+      // inflando o saldo sem venda nenhuma ter sido desfeita.
+      //
+      // O lock precisa vir de um SELECT ... FOR UPDATE explícito porque findUnique
+      // não emite cláusula de bloqueio. Sob READ COMMITTED (o padrão do Postgres,
+      // que o Prisma não altera), o findUnique seguinte é um novo statement, com
+      // snapshot novo — enxerga o commit de quem passou na frente.
+      const travadas = await tx.$queryRaw<{ id: number }[]>`
+        SELECT id FROM pedidos WHERE id = ${id} FOR UPDATE
+      `;
+      if (travadas.length === 0) {
+        throw new PedidoNaoEncontradoError();
+      }
+
+      const pedidoAtual = await tx.pedido.findUnique({
+        where: { id },
+        include: { itens: { include: { produto: true } } },
+      });
+      if (!pedidoAtual) {
+        throw new PedidoNaoEncontradoError();
+      }
+
+      const estavaCancelado = pedidoAtual.status === 'CANCELADO';
+      const vaiCancelar = novoStatus === 'CANCELADO';
+
+      // entregueEm é a fonte oficial da data de faturamento realizado (usada pelo
+      // dashboard): grava ao entrar em ENTREGUE, limpa ao sair — nunca fica com uma
+      // data "órfã" presa num pedido que não está mais entregue. Qualquer outra
+      // transição (que não envolva entrar/sair de ENTREGUE) não toca no campo.
+      let entregueEm = pedidoAtual.entregueEm;
+      if (novoStatus === 'ENTREGUE' && pedidoAtual.status !== 'ENTREGUE') {
+        entregueEm = new Date();
+      } else if (novoStatus !== 'ENTREGUE' && pedidoAtual.status === 'ENTREGUE') {
+        entregueEm = null;
+      }
+
       if (!estavaCancelado && vaiCancelar) {
         // Cancelando um pedido ativo: devolve pro estoque o que ele tinha reservado.
         for (const item of pedidoAtual.itens) {
@@ -327,7 +360,7 @@ pedidosRouter.patch('/:id/status', autenticar, async (req, res) => {
             data: { estoque: { decrement: item.quantidade } },
           });
           if (resultado.count === 0) {
-            throw new EstoqueInsuficienteError(item.produtoId);
+            throw new EstoqueInsuficienteError(item.produtoId, item.produto.nome);
           }
         }
       }
@@ -341,10 +374,13 @@ pedidosRouter.patch('/:id/status', autenticar, async (req, res) => {
 
     res.json(pedido);
   } catch (erro) {
+    if (erro instanceof PedidoNaoEncontradoError) {
+      res.status(404).json({ erro: 'pedido não encontrado' });
+      return;
+    }
     if (erro instanceof EstoqueInsuficienteError) {
-      const item = pedidoAtual.itens.find((item) => item.produtoId === erro.produtoId);
       res.status(400).json({
-        erro: `não é possível reativar o pedido: estoque insuficiente para "${item?.produto.nome ?? erro.produtoId}"`,
+        erro: `não é possível reativar o pedido: estoque insuficiente para "${erro.nomeProduto ?? erro.produtoId}"`,
       });
       return;
     }
